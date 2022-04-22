@@ -1,2 +1,3 @@
-# -techteamer_mq_java
+# techteamer_mq_java
+
 A RabbitMQ wrapper for java
