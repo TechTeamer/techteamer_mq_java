@@ -1,3 +1,8 @@
+import netscape.javascript.JSObject
+import java.nio.Buffer
+import java.nio.ByteBuffer
+import kotlin.concurrent.thread
+
 fun main(): Unit {
     var myConfig = object : QueueConfig {
         override var url: String
@@ -8,11 +13,32 @@ fun main(): Unit {
     }
     val conn = QueueConnection(myConfig)
 
-    // val client = RPCClient(conn)
-    // client.initalize()
+    val myChannel = conn.getChannel()
 
-    val x = mapOf("ez" to "az")
-    val y = x.toString()
-    val z = y.toByteArray()
-    println(String(z))
+
+    var message = object : QueueMessage {
+        override var action: String = ""
+            get() = "test"
+        override val status: String
+            get() = "test"
+        override val data: String
+            get() = "test"
+        override val attachments: MutableMap<String, Buffer>?
+            get() = mutableMapOf("test" to ByteBuffer.wrap("testttttt".toByteArray()))
+    }
+
+
+    val client = RPCClient(myChannel, "test")
+    client.initalize()
+    thread(true) {
+        val serv = RPCServer(myChannel, "test")
+        serv.mainloop()
+    }
+    val resp = client.call(message)
+    println("RESP $resp")
+
+    val resp2 = client.call(message)
+    println("RESP2222 $resp2")
+
+
 }

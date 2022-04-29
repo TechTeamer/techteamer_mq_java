@@ -1,13 +1,13 @@
 import java.nio.Buffer
 
 interface QueueMessage {
-    val action: String
+    var action: String
     val status: String
     val data: String
-    val attachments: MutableMap<String, String>
+    val attachments: MutableMap<String, Buffer>?
 
     fun addAttachment(name: String, buffer: Buffer) {
-        attachments[name] = buffer.toString()
+        this.attachments?.set(name, buffer)
     }
 
     fun serialize(message: QueueMessage): String {

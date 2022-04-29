@@ -1,9 +1,20 @@
-import com.rabbitmq.client.AMQP
-import com.rabbitmq.client.Channel
-import com.rabbitmq.client.RpcServer
+import com.rabbitmq.client.*
 
-open class RPCServer(channel: Channel?) : RpcServer(channel) {
+open class RPCServer(channel: Channel?, queueName: String) : RpcServer(channel, queueName) {
+
+
     open override fun handleCall(requestBody: ByteArray?, replyProperties: AMQP.BasicProperties?): ByteArray {
-        return super.handleCall(requestBody, replyProperties)
+        println("handleCall executed ${requestBody?.let { String(it) }}")
+        return "received".toByteArray()
+    }
+
+    override fun processRequest(request: Delivery?) {
+        println("Process started")
+        super.processRequest(request)
+    }
+
+    override fun mainloop(): ShutdownSignalException {
+        println("mainloop started")
+        return super.mainloop()
     }
 }
