@@ -1,6 +1,3 @@
-import netscape.javascript.JSObject
-import java.nio.Buffer
-import java.nio.ByteBuffer
 import kotlin.concurrent.thread
 
 fun main(): Unit {
@@ -15,30 +12,40 @@ fun main(): Unit {
 
     val myChannel = conn.getChannel()
 
+    val client = RPCClient(myChannel, "test2")
+    client.initialize()
 
-    var message = object : QueueMessage {
-        override var action: String = ""
-            get() = "test"
-        override val status: String
-            get() = "test"
-        override val data: String
-            get() = "test"
-        override val attachments: MutableMap<String, Buffer>?
-            get() = mutableMapOf("test" to ByteBuffer.wrap("testttttt".toByteArray()))
-    }
+//    thread(true) {
+//        val serv = RPCServer(myChannel, "test")
+//        serv.mainloop()
+//    }
 
+    val message = QueueMessage(
+        "ok",
+        mutableMapOf("x" to "x", "y" to true, "z" to 70),
+    )
 
-    val client = RPCClient(myChannel, "test")
-    client.initalize()
-    thread(true) {
-        val serv = RPCServer(myChannel, "test")
-        serv.mainloop()
-    }
+    message.addAttachment("testAtt", "test".toByteArray())
+
+    message.addAttachment("testAtt2", "testdfguzsdgvf".toByteArray())
+
+    println(message.attachments)
+
     val resp = client.call(message)
-    println("RESP $resp")
+    if (resp != null) {
+        val unserializedResp = unserialize(resp)
+        if (unserializedResp != null) {
+            println(unserializedResp.data)
+            println(unserializedResp.attachments)
+        }
+    }
 
-    val resp2 = client.call(message)
-    println("RESP2222 $resp2")
+}
 
+class TestC<T>(private val i: T) {
+    fun getInt(): T {
+        return i
+    }
 
+    val myMap = mapOf("egy" to 1, "kettö" to 2, "harom" to "harom")
 }
