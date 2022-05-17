@@ -5,13 +5,12 @@ import com.rabbitmq.client.ConnectionFactory
 class QueueConnection(private val config: QueueConfig) {
     private val factory = ConnectionFactory()
     private var connection: Connection = factory.newConnection(config.url)
-    private var channel: Channel = connection.createChannel()
+    open lateinit var myChannel: Channel
+    var logger = config.logger
 
     fun getChannel(): Channel {
-        return channel
-    }
-
-    fun getConnection(): Connection {
-        return connection
+        if (myChannel != null) return myChannel
+        myChannel = connection.createChannel()
+        return myChannel
     }
 }

@@ -25,9 +25,10 @@ open class RPCServer(channel: Channel?, queueName: String) : RpcServer(channel, 
             replyProperties = postprocessReplyProperties(request, replyProperties.builder())
             println("I am here")
             println(replyBody)
+            println(replyTo)
             val channel = channel
             println(replyTo.javaClass)
-            channel.basicPublish("", replyTo, replyProperties, replyBody)
+            channel.basicPublish("test2-exchange", replyTo, replyProperties, replyBody)
         } else {
             handleCast(request)
         }
@@ -36,5 +37,9 @@ open class RPCServer(channel: Channel?, queueName: String) : RpcServer(channel, 
     override fun mainloop(): ShutdownSignalException {
         println("mainloop started")
         return super.mainloop()
+    }
+
+    fun initialize() {
+        mainloop()
     }
 }

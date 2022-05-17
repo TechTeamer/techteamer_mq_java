@@ -1,51 +1,66 @@
+import mu.KLogger
 import kotlin.concurrent.thread
 
 fun main(): Unit {
-    var myConfig = object : QueueConfig {
-        override var url: String
-            get() = "amqp://guest:guest@localhost:5672/"
-            set(value) {}
-        override val options: String
-            get() = "Temp value"
-    }
-    val conn = QueueConnection(myConfig)
-
-    val myChannel = conn.getChannel()
-
-    val client = RPCClient(myChannel, "test2")
-    client.initialize()
-
+//    var myConfig = object : QueueConfig {
+//        override var url: String
+//            get() = "amqp://guest:guest@localhost:5672/"
+//            set(value) {}
+//        override val options: String
+//            get() = "Temp value"
+//        override val logger: KLogger
+//            get() = TODO("Not yet implemented")
+//    }
+//    val conn = QueueConnection(myConfig)
+//
+//    val myChannel = conn.getChannel()
+//
+//
+//
 //    thread(true) {
-//        val serv = RPCServer(myChannel, "test")
+//        val serv = RPCServer(myChannel, "test2")
 //        serv.mainloop()
 //    }
 
-    val message = QueueMessage(
-        "ok",
-        mutableMapOf("x" to "x", "y" to true, "z" to 70),
-    )
+//    val client = RPCClient(myChannel, "test2")
+//    client.initialize()
+//
+//    val message = QueueMessage(
+//        "ok",
+//        mutableMapOf("x" to "x", "y" to true, "z" to 70),
+//    )
+//
+//    message.addAttachment("testAtt", "test".toByteArray())
+//    message.addAttachment("testAtt2", "testdfguzsdgvf".toByteArray())
+//
+//    println(message.attachments)
+//
+//    val resp = client.call(message)
+//    if (resp != null) {
+//        val unserializedResp = unserialize(resp)
+//        if (unserializedResp != null) {
+//            println(unserializedResp.data)
+//            println(unserializedResp.attachments)
+//        }
+//    }
 
-    message.addAttachment("testAtt", "test".toByteArray())
-
-    message.addAttachment("testAtt2", "testdfguzsdgvf".toByteArray())
-
-    println(message.attachments)
-
-    val resp = client.call(message)
-    if (resp != null) {
-        val unserializedResp = unserialize(resp)
-        if (unserializedResp != null) {
-            println(unserializedResp.data)
-            println(unserializedResp.attachments)
-        }
-    }
+    // testFun(TestClass().javaClass)
 
 }
 
-class TestC<T>(private val i: T) {
-    fun getInt(): T {
-        return i
-    }
-
-    val myMap = mapOf("egy" to 1, "kettö" to 2, "harom" to "harom")
-}
+//open class TestOne() {
+//    open fun print() {
+//        println("test1")
+//    }
+//}
+//class TestClass() : TestOne() {
+//    override fun print() {
+//        println("test2")
+//    }
+//}
+//
+//fun testFun(OverrideClass: Class<TestOne>) {
+//    val testI = OverrideClass.getDeclaredConstructor().newInstance()
+//
+//    testI.print()
+//}

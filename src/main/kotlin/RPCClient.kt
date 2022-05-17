@@ -4,9 +4,9 @@ import com.rabbitmq.client.RpcClient
 import com.rabbitmq.client.RpcClientParams
 
 open class RPCClient(
-    private val channel: Channel,
+    private val connection: QueueConnection,
     private val rpcName: String = "defaultName",
-    private val options: RpcOption = object : RpcOption {
+    private val options: RpcOptions = object : RpcOptions {
         override val queueMaxSize: Int = 100
         override val timeOutMs: Int = 5000
     }
@@ -19,6 +19,7 @@ open class RPCClient(
     private val exchangeName = "$rpcName-exchange"
 
     fun initialize() {
+        val channel = connection.getChannel()
         channel.exchangeDeclare(exchangeName, "direct", true)
         channel.queueDeclare(rpcName, true, false, false, null)
         channel.queueBind(rpcName, exchangeName, keyName)
@@ -42,7 +43,7 @@ open class RPCClient(
 
 }
 
-interface RpcOption {
+interface RpcOptions {
     val queueMaxSize: Int
     val timeOutMs: Int
 }

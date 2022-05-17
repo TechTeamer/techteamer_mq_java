@@ -8,22 +8,22 @@ import java.nio.ByteOrder
 private val gson = Gson()
 
 class QueueMessage(
-    private val status: String,
+    val status: String,
     val data: MutableMap<String, Any?>,
     val attachArray: MutableList<List<Any>> = mutableListOf(),
 ) {
     val attachments: MutableMap<String, ByteArray> = mutableMapOf()
-    val timeOut: Number = 30000
+    var timeOut: Number = 30000
     fun addAttachment(name: String, bytes: ByteArray) {
-        this.attachments[name] = bytes
+        attachments[name] = bytes
     }
 
     fun serialize(): ByteArray {
         val attachmentBuffers = mutableListOf<ByteArray>()
         val attachMap = mutableMapOf<String, Int>()
-        val mapToJson = mutableMapOf("status" to this.status, "data" to this.data)
+        val mapToJson = mutableMapOf("status" to status, "data" to data)
 
-        this.attachments.forEach { entry ->
+        attachments.forEach { entry ->
             attachmentBuffers.add(entry.value)
             attachMap[entry.key] = entry.value.size
         }
@@ -53,11 +53,17 @@ fun fromJsonToQueueMessage(message: String): QueueMessage {
 
     val mappedData = gson.fromJson(parsedData, Map::class.java)
 
-    return QueueMessage(
+    val messageBack = QueueMessage(
         mappedData["status"] as String,
         mappedData["data"] as MutableMap<String, Any?>,
         mappedData["attachArray"] as MutableList<List<Any>>
     )
+
+    if (mappedData["timeOut"] != null) {
+        messageBack.timeOut = mappedData["timeOut"] as Number
+    }
+
+    return messageBack
 }
 
 fun unserialize(byteArray: ByteArray): QueueMessage? {
