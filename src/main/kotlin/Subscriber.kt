@@ -2,12 +2,11 @@ import com.rabbitmq.client.BasicProperties
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.DeliverCallback
 import com.rabbitmq.client.Delivery
-import mu.KLogger
-import mu.KotlinLogging
+import org.slf4j.Logger
 
 open class Subscriber(
     var connection: QueueConnection,
-    private var logger: KLogger = KotlinLogging.logger { },
+    private var logger: Logger,
     open val name: String,
     options: ConnectionOptions
 ) : ConnectionOptions {
@@ -26,16 +25,15 @@ open class Subscriber(
     open val channel = connection.getChannel()
 
     fun setLogger(loggerInput: Any) {
-        logger = loggerInput as KLogger
+        logger = loggerInput as Logger
     }
 
     open fun initialize() {
 
-        channel.exchangeDeclare(name, "fanout")
-        val queueName = channel.queueDeclare().queue;
-
-        channel.queueBind(queueName, name, "")
-        channel.basicConsume(queueName, true, deliverCallback) { consumerTag: String? -> }
+        channel.exchangeDeclare(name, "fanout", true)
+        val x = channel.queueDeclare(name, true, false, false, null)?.queue;
+        channel.queueBind(name, name, "")
+        channel.basicConsume(name, true, deliverCallback) { consumerTag: String? -> }
     }
 
     open val deliverCallback = DeliverCallback { consumerTag: String?, delivery: Delivery ->
@@ -43,7 +41,7 @@ open class Subscriber(
         processMessage(channel, delivery, consumerTag)
     }
 
-    open fun processMessage(channel: Channel, delivery: Delivery, consumerTag: String?) {
+    open fun processMessage(channel: Channel, delivery: Delivery, consumerTag: String?): Any? {
         val request = unserialize(delivery.body)
 
         if (request != null) {
@@ -61,7 +59,7 @@ open class Subscriber(
             }
 
             if (counter > maxRetry) {
-                logger.error("SUBSCRIBER TRIED TOO MANY TIMES $name, $request, $delivery")
+                logger.error("SUBSCRIBER TRIED TOO MANY TIMES $name, $request, ${delivery.body}")
                 ack(channel, delivery)
                 if (retryMap[consumerTag] != null) {
                     retryMap.remove(consumerTag)
@@ -70,6 +68,9 @@ open class Subscriber(
         }
 
         val result = request?.let { callback(it.data, delivery.properties, request, delivery) }
+        retryMap.remove(consumerTag)
+
+        return result
     }
 
     open fun callback(
@@ -110,9 +111,3 @@ open class Subscriber(
 
 }
 
-interface ConnectionOptions {
-    val maxRetry: Int
-    val timeOutMs: Number
-    val prefetchCount: Int?
-        get() = 1
-}

@@ -1,45 +1,41 @@
 import com.rabbitmq.client.*
+import org.slf4j.Logger
 
-open class RPCServer(channel: Channel?, queueName: String) : RpcServer(channel, queueName) {
+open class RPCServer(open val ch: Channel, open val name: String, val logger: Logger) : RpcServer(ch, name) {
 
-    open override fun handleCall(requestBody: ByteArray, replyProperties: AMQP.BasicProperties?): ByteArray {
+    override fun handleCall(requestBody: ByteArray, replyProperties: AMQP.BasicProperties?): ByteArray {
         val message: QueueMessage? = unserialize(requestBody)
 
-        if (message != null) {
-            println(message.data)
+        val response = QueueResponse()
+
+        val answer = callback(requestBody, response, message)
+
+        val replyAttachments = response.attachments
+
+        var reply: QueueMessage? = null
+
+        return try {
+            answer.remove("response")
+            reply = QueueMessage("ok", answer)
+            replyAttachments.forEach { t ->
+                reply.addAttachment(t.key, t.value)
+            }
+            reply.serialize()
+        } catch (err: Exception) {
+            QueueMessage("error", mutableMapOf("message" to "cannot encode answer")).serialize()
         }
-        return "received".toByteArray()
+
     }
 
-    override fun processRequest(request: Delivery?) {
-        if (request != null) {
-            println(request.properties)
-        }
-        val requestProperties = request!!.properties
-        val correlationId = requestProperties.correlationId
-        val replyTo = requestProperties.replyTo
-        if (correlationId != null && replyTo != null) {
-            val replyPropertiesBuilder = AMQP.BasicProperties.Builder().correlationId(correlationId)
-            var replyProperties = preprocessReplyProperties(request, replyPropertiesBuilder)
-            val replyBody = handleCall(request, replyProperties)
-            replyProperties = postprocessReplyProperties(request, replyProperties.builder())
-            println("I am here")
-            println(replyBody)
-            println(replyTo)
-            val channel = channel
-            println(replyTo.javaClass)
-            channel.basicPublish("test2-exchange", replyTo, replyProperties, replyBody)
-        } else {
-            handleCast(request)
-        }
+    open fun callback(
+        requestBody: ByteArray, response: QueueResponse, message: QueueMessage?
+    ): MutableMap<String, Any?> {
+        return mutableMapOf("test" to "test", "valami" to "valami,", "igen" to 20, "response" to response)
     }
 
-    override fun mainloop(): ShutdownSignalException {
-        println("mainloop started")
-        return super.mainloop()
-    }
 
     fun initialize() {
+        this.logger.info("RPC server mainloop started - $name")
         mainloop()
     }
 }

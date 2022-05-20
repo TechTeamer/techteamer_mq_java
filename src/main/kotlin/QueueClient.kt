@@ -1,13 +1,16 @@
-import mu.KLogger
+import org.slf4j.Logger
 
-class QueueClient(
+open class QueueClient(
     override val queueConnection: QueueConnection,
-    override val logger: KLogger,
-    val name: String
+    override val logger: Logger,
+    open val name: String
     ) : Publisher(queueConnection, logger, name) {
-    override val channel = queueConnection.getChannel()
+
 
     override fun initialize() {
+        val channel = queueConnection.getChannel()
+        channel.exchangeDeclare(name, "direct", true)
         channel.queueDeclare(name, true, false, false, null)
+        channel.queueBind(name, name, "")
     }
 }

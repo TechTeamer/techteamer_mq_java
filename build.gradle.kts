@@ -20,6 +20,7 @@ dependencies {
     implementation ("com.google.code.gson:gson:2.9.0")
     implementation ("io.github.microutils:kotlin-logging-jvm:2.1.21")
     implementation (group = "ch.qos.logback", name = "logback-classic", version = "1.2.6")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
 }
 
 tasks.test {

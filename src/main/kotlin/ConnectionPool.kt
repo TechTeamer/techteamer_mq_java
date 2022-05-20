@@ -1,13 +1,14 @@
 import mu.KLogger
 import mu.KotlinLogging
 
-class ConnectionPool() {
+class ConnectionPool(poolConfig: Map<String, String>) {
     var connections = mutableMapOf<String, QueueManager>()
-    var defaultConnectionName = "default"
+    var defaultConnectionName = poolConfig["defaultConnectionName"] ?: "default"
+
     private var logger = KotlinLogging.logger {  }
     lateinit var defaultConnection: QueueManager
 
-    fun setupQueueManagers(connectionConfigs: MutableMap<String, QueueConfig>) {
+    fun setupQueueManagers(connectionConfigs: Map<String, QueueConfig>) {
         var defaultConnectionConfig: QueueConfig? = connectionConfigs["$defaultConnectionName"]
 
         if (defaultConnectionConfig != null) {
