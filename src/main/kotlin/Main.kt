@@ -1,12 +1,15 @@
 import com.rabbitmq.client.BasicProperties
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Delivery
+import kotlinx.coroutines.delay
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 
 val logger: Logger = LoggerFactory.getLogger("testLogger")
+var testX: String? = null
 
 fun main() {
     val myLogger = logger
@@ -25,7 +28,6 @@ fun main() {
     pool.setupQueueManagers(mapOf("mydefaultname" to myConfig))
 
     val queue = pool.defaultConnection
-
 
 
     queue.getRPCServer("test3", MyFirstRpcServer::class.java, object : RpcOptions {
@@ -104,7 +106,6 @@ fun main() {
 
     pubber.set(10)
 
-
 }
 
 class MyRPCClientt(
@@ -140,8 +141,8 @@ class MyFirstRpcServer(override val ch: Channel, override val name: String, logg
     override fun callback(
         requestBody: ByteArray, response: QueueResponse, message: QueueMessage?
     ): MutableMap<String, Any?> {
-        println("called callback")
         response.addAttachment("testAtt", "test".toByteArray())
+        response.addAttachment("testAtt2222", "test20".toByteArray())
         response.ok("fain")
         return mutableMapOf("test" to "test", "valami" to "valami,", "igen" to 20)
     }
@@ -159,7 +160,10 @@ class MyQueueServer(
         request: QueueMessage,
         delivery: Delivery
     ): Any? {
+
         logger.info("received $data")
+        testX = "$data"
+
         return null
     }
 }
@@ -194,6 +198,8 @@ class MySubscriber(
     override val name: String,
     override val options: ConnectionOptions
 ) : Subscriber(connection, logger, name, options) {
+
+
     override fun callback(
         data: MutableMap<String, Any?>,
         props: BasicProperties,

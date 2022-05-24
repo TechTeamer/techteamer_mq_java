@@ -2,6 +2,7 @@ import com.rabbitmq.client.BasicProperties
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.DeliverCallback
 import com.rabbitmq.client.Delivery
+import kotlinx.coroutines.*
 import org.slf4j.Logger
 
 open class Subscriber(
@@ -40,40 +41,50 @@ open class Subscriber(
         processMessage(channel, delivery, consumerTag)
     }
 
-    open fun processMessage(channel: Channel, delivery: Delivery, consumerTag: String?): Any? {
-        val request = unserialize(delivery.body)
+    open fun processMessage(channel: Channel, delivery: Delivery, consumerTag: String?): Any? =
+        CoroutineScope(Dispatchers.IO).launch {
+            val request = unserialize(delivery.body)
 
-        if (request != null) {
-            if (request.status != "ok") {
-                ack(channel, delivery)
-            }
-        }
-
-        if (consumerTag != null) {
-            var counter = 1
-            if (retryMap[consumerTag] != null) {
-                counter += retryMap[consumerTag]!!
-            } else {
-                retryMap[consumerTag] = counter
-            }
-
-            println(options?.maxRetry)
-            if (options?.maxRetry != null) {
-                if (counter > options!!.maxRetry!!) {
-                    logger.error("SUBSCRIBER TRIED TOO MANY TIMES $name, $request, ${delivery.body}")
+            if (request != null) {
+                if (request.status != "ok") {
                     ack(channel, delivery)
-                    if (retryMap[consumerTag] != null) {
-                        retryMap.remove(consumerTag)
+                }
+            }
+
+            if (consumerTag != null) {
+                var counter = 1
+                if (retryMap[consumerTag] != null) {
+                    counter += retryMap[consumerTag]!!
+                } else {
+                    retryMap[consumerTag] = counter
+                }
+
+                if (options?.maxRetry != null && delivery.envelope.isRedeliver) {
+                    if (counter > options!!.maxRetry!!) {
+                        logger.error("SUBSCRIBER TRIED TOO MANY TIMES $name, $request, ${delivery.body}")
+                        ack(channel, delivery)
+                        if (retryMap[consumerTag] != null) {
+                            retryMap.remove(consumerTag)
+                        }
                     }
                 }
             }
+
+            try {
+                options?.timeOutMs?.let {
+                    withTimeout(it.toLong()) {
+                        if (request != null) {
+                            callback(request.data, delivery.properties, request, delivery)
+                            println("JOB IS READY")
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                logger.error("TIMEOUT ${e.message}")
+            } finally {
+                retryMap.remove(consumerTag)
+            }
         }
-
-        val result = request?.let { callback(it.data, delivery.properties, request, delivery) }
-        retryMap.remove(consumerTag)
-
-        return result
-    }
 
     open fun callback(
         data: MutableMap<String, Any?>,

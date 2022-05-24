@@ -5,18 +5,14 @@ open class RPCServer(open val ch: Channel, open val name: String, val logger: Lo
 
     override fun handleCall(requestBody: ByteArray, replyProperties: AMQP.BasicProperties?): ByteArray {
         val message: QueueMessage? = unserialize(requestBody)
-
         val response = QueueResponse()
 
         val answer = callback(requestBody, response, message)
 
         val replyAttachments = response.attachments
 
-        var reply: QueueMessage? = null
-
         return try {
-            answer.remove("response")
-            reply = QueueMessage("ok", answer)
+            val reply = QueueMessage("ok", answer)
             replyAttachments.forEach { t ->
                 reply.addAttachment(t.key, t.value)
             }
