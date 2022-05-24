@@ -4,9 +4,9 @@ import org.slf4j.Logger
 
 open class QueueServer(
     open val queueConnection: QueueConnection,
-    open val logger: Logger,
+    override var logger: Logger,
     override val name: String,
-    open val options: ConnectionOptions
+    override val options: ConnectionOptions
 ) : Subscriber(queueConnection, logger, name, options) {
 
 

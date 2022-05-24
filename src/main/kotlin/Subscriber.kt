@@ -5,14 +5,15 @@ import com.rabbitmq.client.Delivery
 import org.slf4j.Logger
 
 open class Subscriber(
-    var connection: QueueConnection,
-    private var logger: Logger,
+    open var connection: QueueConnection,
+    open var logger: Logger,
     open val name: String,
-    options: ConnectionOptions
-) : ConnectionOptions {
-    
-    override val maxRetry: Int = options.maxRetry
-    override val timeOutMs: Number = options.timeOutMs
+    open val options: ConnectionOptions? = object : ConnectionOptions {
+        override val maxRetry = 1
+        override val timeOutMs = 5000
+        override val prefetchCount = 1
+    }
+) {
     open val retryMap = mutableMapOf<String, Int>()
     open val actions = mutableMapOf<String, (
         Any,
@@ -22,22 +23,20 @@ open class Subscriber(
         delivery: Delivery
     ) -> Any>()
 
-    open val channel = connection.getChannel()
-
     fun setLogger(loggerInput: Any) {
         logger = loggerInput as Logger
     }
 
     open fun initialize() {
-
+        val channel = connection.getChannel()
         channel.exchangeDeclare(name, "fanout", true)
-        val x = channel.queueDeclare(name, true, false, false, null)?.queue;
+        channel.queueDeclare(name, true, false, false, null)?.queue;
         channel.queueBind(name, name, "")
         channel.basicConsume(name, true, deliverCallback) { consumerTag: String? -> }
     }
 
     open val deliverCallback = DeliverCallback { consumerTag: String?, delivery: Delivery ->
-        // val message = String(delivery.body, "UTF-8")
+        val channel = connection.getChannel()
         processMessage(channel, delivery, consumerTag)
     }
 
@@ -58,11 +57,14 @@ open class Subscriber(
                 retryMap[consumerTag] = counter
             }
 
-            if (counter > maxRetry) {
-                logger.error("SUBSCRIBER TRIED TOO MANY TIMES $name, $request, ${delivery.body}")
-                ack(channel, delivery)
-                if (retryMap[consumerTag] != null) {
-                    retryMap.remove(consumerTag)
+            println(options?.maxRetry)
+            if (options?.maxRetry != null) {
+                if (counter > options!!.maxRetry!!) {
+                    logger.error("SUBSCRIBER TRIED TOO MANY TIMES $name, $request, ${delivery.body}")
+                    ack(channel, delivery)
+                    if (retryMap[consumerTag] != null) {
+                        retryMap.remove(consumerTag)
+                    }
                 }
             }
         }

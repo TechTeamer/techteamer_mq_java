@@ -2,7 +2,7 @@ import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.AMQP.BasicProperties
 import org.slf4j.Logger
 
-open class Publisher(open val queueConnection: QueueConnection, open val logger: Logger, val exchange: String) {
+open class Publisher(open val queueConnection: QueueConnection, open val logger: Logger, open val exchange: String) {
 
 
     open fun initialize() {

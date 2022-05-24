@@ -57,7 +57,7 @@ fun main() {
             get() = 5
         override val timeOutMs: Int
             get() = 10000
-    })
+    }) as MyRPCClientt
 
 
     val client = queue.getRPCClient("test2", MyRPCClient::class.java, object : RpcOptions {
@@ -67,7 +67,7 @@ fun main() {
             get() = 5
         override val timeOutMs: Int
             get() = 10000
-    })
+    }) as MyRPCClient
 
     val server = queue.getQueueServer("test10", MyQueueServer::class.java, object : ConnectionOptions {
         override val maxRetry = 1
@@ -75,48 +75,36 @@ fun main() {
         override val prefetchCount = 1
     })
 
-    val cqClient = queue.getQueueClient("test20", MyQueueClient::class.java)
+    val cqClient = queue.getQueueClient("test20", MyQueueClient::class.java) as MyQueueClient
 
+    queue.getSubscriber("test15", MySubscriber::class.java, object : ConnectionOptions {
+        override val maxRetry = 1
+        override val timeOutMs = 5000
+        override val prefetchCount = 1
+    })
+    queue.getSubscriber("test15", MySubscriber::class.java, object : ConnectionOptions {
+        override val maxRetry = 1
+        override val timeOutMs = 5000
+        override val prefetchCount = 1
+    })
+
+
+    val pubber = queue.getPublisher("test25", MyPublisher::class.java) as MyPublisher
 
     println("SERVERS ${queue.queueServers}")
     pool.connect()
 
-    client?.call(mutableMapOf("testtttt" to 20), 5000, null)
+    client.call(mutableMapOf("testtttt" to 20), 5000, null)
 
-    client0?.call(mutableMapOf("testtttt00000" to 200000), 5000, null)
+    client0.call(mutableMapOf("testtttt00000" to 200000), 5000, null)
 
-    cqClient?.sendAction(
-        "action",
-        data = mutableMapOf("teszztem" to "tteszt"),
-        attachments = mutableMapOf(),
-        correlationId = UUID.randomUUID().toString()
+    cqClient.doAction(
+        data = mutableMapOf("teszztem" to "tteszt")
     )
 
-//    val client = RPCClient(myChannel, "test2")
-//    client.initialize()
-//
-//    val message = QueueMessage(
-//        "ok",
-//        mutableMapOf("x" to "x", "y" to true, "z" to 70),
-//    )
-//
-//    message.addAttachment("testAtt", "test".toByteArray())
-//    message.addAttachment("testAtt2", "testdfguzsdgvf".toByteArray())
-//
-//    println(message.attachments)
-//
-//    val resp = client.call(message)
-//    if (resp != null) {
-//        val unserializedResp = unserialize(resp)
-//        if (unserializedResp != null) {
-//            println(unserializedResp.data)
-//            println(unserializedResp.attachments)
-//        }
-//    }
+    pubber.set(10)
 
 
-//    println(testFun3())
-    //testFun(TestClass(2).javaClass)
 }
 
 class MyRPCClientt(
@@ -126,6 +114,8 @@ class MyRPCClientt(
         message: MutableMap<String, Any?>, timeOutMs: Int?, attachments: MutableMap<String, ByteArray>?
     ): ByteArray? {
         val result = super.call(message, timeOutMs, attachments)
+
+        logger.info(result?.let { String(it) })
 
         return result
     }
@@ -158,8 +148,10 @@ class MyFirstRpcServer(override val ch: Channel, override val name: String, logg
 }
 
 class MyQueueServer(
-    override val queueConnection: QueueConnection, override val logger: Logger,
-    override val name: String, override val options: ConnectionOptions
+    override val queueConnection: QueueConnection,
+    override var logger: Logger,
+    override val name: String,
+    override val options: ConnectionOptions
 ) : QueueServer(queueConnection, logger, name, options) {
     override fun callback(
         data: MutableMap<String, Any?>,
@@ -182,26 +174,38 @@ class MyQueueClient(
     }
 }
 
-//open class TestOne(open val i: Int) {
-//    open fun print() {
-//        println("test1")
-//    }
-//}
-//
-//class TestClass constructor(override val i: Int) : TestOne(i) {
-//
-//    override fun print() {
-//        println("test2 $i")
-//        println(UUID.randomUUID().toString())
-//    }
-//}
-//
-//fun testFun(OverrideClass: Class<TestOne>) {
-//    val i = 30
-//    val testI = OverrideClass.getConstructor(1.javaClass).newInstance(i)
-//
-//    testI.print()
-//}
+class MyPublisher(
+    override val queueConnection: QueueConnection,
+    override val logger: Logger,
+    override val exchange: String
+) : Publisher(queueConnection, logger, exchange) {
+    fun set(id: Int) {
+        sendAction(
+            "send",
+            mutableMapOf("data" to id),
+            attachments = mutableMapOf("publisehrTestAttachment" to "hello".toByteArray())
+        )
+    }
+}
+
+class MySubscriber(
+    override var connection: QueueConnection,
+    override var logger: Logger,
+    override val name: String,
+    override val options: ConnectionOptions
+) : Subscriber(connection, logger, name, options) {
+    override fun callback(
+        data: MutableMap<String, Any?>,
+        props: BasicProperties,
+        request: QueueMessage,
+        delivery: Delivery
+    ): Any? {
+        logger.info("received $data")
+        return null
+    }
+}
+
+
 
 
 

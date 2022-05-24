@@ -11,39 +11,45 @@ class QueueManager(private val config: QueueConfig) {
     var connection: QueueConnection = QueueConnection(config)
     var logger = config.logger
 
-    var rpcClients = mutableMapOf<String, RPCClient>()
-    var rpcServers = mutableMapOf<String, RPCServer>()
-    var publishers = mutableMapOf<String, Publisher>()
-    var subscribers = mutableMapOf<String, Subscriber>()
-    var queueServers = mutableMapOf<String, QueueServer>()
-    var queueClients = mutableMapOf<String, QueueClient>()
+    var rpcClients = mutableMapOf<String, Any>()
+    var rpcServers = mutableMapOf<String, Any>()
+    var publishers = mutableMapOf<String, Any>()
+    var subscribers = mutableMapOf<String, Any>()
+    var queueServers = mutableMapOf<String, Any>()
+    var queueClients = mutableMapOf<String, Any>()
     fun connect() {
 
         try {
             rpcServers.forEach { t ->
                 thread {
-                    t.value.initialize()
+                    val tClass = t.value as RPCServer
+                    tClass.initialize()
                 }
             }
             rpcClients.forEach { t ->
-                t.value.initialize()
+                val tClass = t.value as RPCClient
+                tClass.initialize()
             }
             publishers.forEach { t ->
-                t.value.initialize()
+                val tClass = t.value as Publisher
+                tClass.initialize()
             }
             subscribers.forEach { t ->
                 thread {
-                    t.value.initialize()
+                    val tClass = t.value as Subscriber
+                    tClass.initialize()
                 }
             }
             queueServers.forEach { t ->
                 thread {
-                    t.value.initialize()
+                    val tClass = t.value as QueueServer
+                    tClass.initialize()
                     logger.info("Queueserver ${t.key} initiated")
                 }
             }
             queueClients.forEach { t ->
-                t.value.initialize()
+                val tClass = t.value as QueueClient
+                tClass.initialize()
                 logger.info("QueueClient ${t.key} initiated")
             }
         } catch (err: Exception) {
@@ -53,63 +59,63 @@ class QueueManager(private val config: QueueConfig) {
     }
 
     fun setLogger(loggerInput: Any) {
-        logger = loggerInput as KLogger
+        logger = loggerInput as Logger
     }
 
-    fun getRPCClient(rpcName: String, OverrideClass: Any, options: RpcOptions): RPCClient? {
+    fun getRPCClient(rpcName: String, OverrideClass: Any, options: RpcOptions): Any? {
         if (rpcClients.contains(rpcName)) return rpcClients[rpcName]
 
         println(QueueConnection::class.java.getDeclaredConstructor(QueueConfig::class.java))
         val myClass = OverrideClass as Class<RPCClient>
-        val rpcClient = myClass.constructors.last().newInstance(connection, rpcName, logger) as RPCClient
+        val rpcClient = myClass.constructors.last().newInstance(connection, rpcName, logger)
 
         rpcClients[rpcName] = rpcClient
 
         return rpcClient
     }
 
-    fun getRPCServer(rpcName: String, OverrideClass: Any, options: RpcOptions): RPCServer? {
+    fun getRPCServer(rpcName: String, OverrideClass: Any, options: RpcOptions): Any? {
         if (rpcServers.contains(rpcName)) return rpcServers[rpcName]
 
         val ch = connection.getChannel()
         ch.queueDeclare(rpcName, true, false, true, null)
 
         val myClass = OverrideClass as Class<RPCServer>
-        val rpcServer = myClass.constructors.last().newInstance(ch, rpcName, logger) as RPCServer
+        val rpcServer = myClass.constructors.last().newInstance(ch, rpcName, logger)
 
         rpcServers[rpcName] = rpcServer
 
         return rpcServer
     }
 
-    fun getPublisher(exchangeName: String, OverrideClass: Any): Publisher? {
+    fun getPublisher(exchangeName: String, OverrideClass: Any): Any? {
         if (publishers.contains(exchangeName)) return publishers[exchangeName]
 
         val myClass = OverrideClass as Class<Publisher>
-        val publisher = myClass.constructors.last().newInstance(connection, logger, exchangeName) as Publisher
+        val publisher = myClass.constructors.last().newInstance(connection, logger, exchangeName)
 
         publishers[exchangeName] = publisher
 
         return publisher
     }
 
-    fun getSubscriber(exchangeName: String, OverrideClass: Any): Subscriber? {
+    fun getSubscriber(exchangeName: String, OverrideClass: Any, options: ConnectionOptions): Any? {
         if (subscribers.contains(exchangeName)) return subscribers[exchangeName]
 
         val myClass = OverrideClass as Class<Subscriber>
-        val subscriber = myClass.constructors.last().newInstance(connection, logger, exchangeName) as Subscriber
+        val subscriber = myClass.constructors.last().newInstance(connection, logger, exchangeName, options)
 
         subscribers[exchangeName] = subscriber
 
         return subscriber
     }
 
-    fun getQueueClient(queueName: String, OverrideClass: Any): QueueClient? {
+    fun getQueueClient(queueName: String, OverrideClass: Any): Any? {
         if (queueClients.contains(queueName)) return queueClients[queueName]
 
         val myClass = OverrideClass as Class<QueueClient>
         println(myClass.constructors.last())
-        val queueClient = myClass.constructors.last().newInstance(connection, logger, queueName) as QueueClient
+        val queueClient = myClass.constructors.last().newInstance(connection, logger, queueName)
 
         queueClients[queueName] = queueClient
 
@@ -118,11 +124,11 @@ class QueueManager(private val config: QueueConfig) {
 
     fun getQueueServer(
         queueName: String, OverrideClass: Any, options: ConnectionOptions
-    ): QueueServer? {
+    ): Any? {
         if (queueServers.contains(queueName)) return queueServers[queueName]
 
         val myClass = OverrideClass as Class<QueueServer>
-        val queueServer = myClass.constructors.last().newInstance(connection, logger, queueName, options) as QueueServer
+        val queueServer = myClass.constructors.last().newInstance(connection, logger, queueName, options)
 
         queueServers[queueName] = queueServer
 
