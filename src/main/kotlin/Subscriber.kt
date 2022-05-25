@@ -74,7 +74,7 @@ open class Subscriber(
                 options?.timeOutMs?.let {
                     withTimeout(it.toLong()) {
                         if (request != null) {
-                            callback(request.data, delivery.properties, request, delivery)
+                            request.data?.let { it1 -> callback(it1, delivery.properties, request, delivery) }
                             println("JOB IS READY")
                         }
                     }

@@ -24,9 +24,8 @@ open class RPCClient constructor(
     private lateinit var client: RpcClient
 
     private val keyName = "$rpcName-key"
-    private val exchangeName = "$rpcName"
 
-    val correlationIdList = mutableListOf<String>()
+    private val correlationIdList = mutableListOf<String>()
 
     fun initialize() {
         val channel = connection.getChannel()
@@ -34,8 +33,6 @@ open class RPCClient constructor(
         val queue = channel.queueDeclare("$rpcName-reply", true, false, false, null)
         channel.queueBind(rpcName, rpcName, keyName)
         channel.basicQos(prefetchCount)
-
-        println(queue.queue)
 
         val rpcOptions = RpcClientParams()
         rpcOptions.channel(channel)
@@ -72,10 +69,8 @@ open class RPCClient constructor(
 
             val props = AMQP.BasicProperties.Builder()
             props.correlationId(correlationId)
-            props.replyTo(rpcName)
 
             val answer = timeOutMs?.let { client.primitiveCall(props.build(), param.serialize(), it) }
-
 
             correlationIdList.remove(correlationId)
 

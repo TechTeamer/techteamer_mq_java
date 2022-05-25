@@ -8,9 +8,9 @@ private val gson = Gson()
 
 class QueueMessage(
     val status: String,
-    val data: MutableMap<String, Any?>,
-    val attachArray: MutableList<List<Any>> = mutableListOf(),
+    val data: MutableMap<String, Any?>?
 ) {
+    val attachArray: MutableList<List<Any>> = mutableListOf()
     val attachments: MutableMap<String, ByteArray> = mutableMapOf()
     var timeOut: Number = 30000
     fun addAttachment(name: String, bytes: ByteArray) {
@@ -48,24 +48,37 @@ class QueueMessage(
 }
 
 fun fromJsonToQueueMessage(message: String): QueueMessage {
-    val parsedData = JsonParser.parseString(message).asJsonObject
+    try {
+        val parsedData = JsonParser.parseString(message).asJsonObject
 
-    val mappedData = gson.fromJson(parsedData, Map::class.java)
+        val mappedData = gson.fromJson(parsedData, Map::class.java)
 
-    val messageBack = QueueMessage(
-        mappedData["status"] as String,
-        mappedData["data"] as MutableMap<String, Any?>,
-        mappedData["attachArray"] as MutableList<List<Any>>
-    )
+        if (mappedData["status"] == null) {
+            return QueueMessage("error", mutableMapOf("error" to "cannot decode JSON string"))
+        }
 
-    if (mappedData["timeOut"] != null) {
-        messageBack.timeOut = mappedData["timeOut"] as Number
+        var data: MutableMap<String, Any?>? = null
+
+        if (mappedData["data"] != null) {
+            data = mappedData["data"] as MutableMap<String, Any?>
+        }
+
+        val messageBack = QueueMessage(
+            mappedData["status"] as String,
+            data
+        )
+
+        if (mappedData["timeOut"] != null) {
+            messageBack.timeOut = mappedData["timeOut"] as Number
+        }
+
+        return messageBack
+    } catch (error: Exception) {
+        return QueueMessage("error", mutableMapOf("error" to error))
     }
-
-    return messageBack
 }
 
-fun unserialize(byteArray: ByteArray): QueueMessage? {
+fun unserialize(byteArray: ByteArray): QueueMessage {
     val stringFromBytes = String(byteArray)
     if (stringFromBytes.startsWith('+')) {
 
@@ -84,6 +97,7 @@ fun unserialize(byteArray: ByteArray): QueueMessage? {
             prevAttachmentLength += (el[1] as Double).toInt()
         }
         return received
+    } else {
+        return fromJsonToQueueMessage(String(byteArray))
     }
-    return null
 }

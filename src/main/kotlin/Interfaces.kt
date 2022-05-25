@@ -12,6 +12,11 @@ interface RpcOptions {
     val prefetchCount: Int
 }
 
+interface RpcServerOptions {
+    val timeOutMs: Int
+    val prefetchCount: Int
+}
+
 interface ConnectionOptions {
     val maxRetry: Int?
     val timeOutMs: Int?

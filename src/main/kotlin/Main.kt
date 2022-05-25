@@ -139,7 +139,9 @@ class MyFirstRpcServer(override val ch: Channel, override val name: String, logg
     RPCServer(ch, name, logger) {
 
     override fun callback(
-        requestBody: ByteArray, response: QueueResponse, message: QueueMessage?
+        data: QueueMessage,
+        delivery: Delivery,
+        response: QueueResponse,
     ): MutableMap<String, Any?> {
         response.addAttachment("testAtt", "test".toByteArray())
         response.addAttachment("testAtt2222", "test20".toByteArray())
