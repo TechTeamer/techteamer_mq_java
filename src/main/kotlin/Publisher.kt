@@ -39,7 +39,6 @@ open class Publisher(open val queueConnection: QueueConnection, open val logger:
                     param.addAttachment(t.key, t.value)
                 }
             }
-            logger.info("$exchange here emáj ${props.build()}")
             channel.basicPublish(exchange, "", props.build(), param.serialize())
         } catch (error: java.lang.Exception) {
             logger.error("CANNOT PUBLISH MESSAGE, $exchange, $error")

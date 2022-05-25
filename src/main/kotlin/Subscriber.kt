@@ -74,10 +74,10 @@ open class Subscriber(
                 timeOut = request.timeOut!!
             }
 
+
             try {
                 withTimeout(timeOut.toLong()) {
                     request.data?.let { it -> callback(it, delivery.properties, request, delivery) }
-                    println("JOB IS READY")
                 }
             } catch (e: Exception) {
                 logger.error("TIMEOUT ${e.message}")

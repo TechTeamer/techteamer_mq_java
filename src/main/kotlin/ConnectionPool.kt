@@ -1,11 +1,11 @@
-import mu.KLogger
-import mu.KotlinLogging
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 class ConnectionPool(poolConfig: Map<String, String>) {
     var connections = mutableMapOf<String, QueueManager>()
     var defaultConnectionName = poolConfig["defaultConnectionName"] ?: "default"
 
-    private var logger = KotlinLogging.logger {  }
+    private var logger = LoggerFactory.getLogger("testLogger")
     lateinit var defaultConnection: QueueManager
 
     fun setupQueueManagers(connectionConfigs: Map<String, QueueConfig>) {
@@ -33,7 +33,7 @@ class ConnectionPool(poolConfig: Map<String, String>) {
     }
 
     fun setLogger(loggerInput: Any) {
-        logger = loggerInput as KLogger
+        logger = loggerInput as Logger
     }
 
     fun getConnection(name: String): QueueManager? {

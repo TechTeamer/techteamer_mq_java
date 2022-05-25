@@ -44,13 +44,11 @@ class QueueManager(private val config: QueueConfig) {
                 thread {
                     val tClass = t.value as QueueServer
                     tClass.initialize()
-                    logger.info("Queueserver ${t.key} initiated")
                 }
             }
             queueClients.forEach { t ->
                 val tClass = t.value as QueueClient
                 tClass.initialize()
-                logger.info("QueueClient ${t.key} initiated")
             }
         } catch (err: Exception) {
             logger.error("Failed to initialize servers", err)
@@ -65,7 +63,6 @@ class QueueManager(private val config: QueueConfig) {
     fun getRPCClient(rpcName: String, OverrideClass: Any, options: RpcOptions): Any? {
         if (rpcClients.contains(rpcName)) return rpcClients[rpcName]
 
-        println(QueueConnection::class.java.getDeclaredConstructor(QueueConfig::class.java))
         val myClass = OverrideClass as Class<RPCClient>
         val rpcClient = myClass.constructors.last().newInstance(connection, rpcName, logger)
 
@@ -114,7 +111,6 @@ class QueueManager(private val config: QueueConfig) {
         if (queueClients.contains(queueName)) return queueClients[queueName]
 
         val myClass = OverrideClass as Class<QueueClient>
-        println(myClass.constructors.last())
         val queueClient = myClass.constructors.last().newInstance(connection, logger, queueName)
 
         queueClients[queueName] = queueClient

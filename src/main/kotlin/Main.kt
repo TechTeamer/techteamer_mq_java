@@ -49,8 +49,6 @@ fun main() {
             get() = 10000
     })
 
-    // println(QueueConnection::class.java.getDeclaredConstructor())
-
 
     val client0 = queue.getRPCClient("test1", MyRPCClientt::class.java, object : RpcOptions {
         override val prefetchCount: Int
@@ -84,16 +82,10 @@ fun main() {
         override val timeOutMs = 5000
         override val prefetchCount = 1
     })
-    queue.getSubscriber("test15", MySubscriber::class.java, object : ConnectionOptions {
-        override val maxRetry = 1
-        override val timeOutMs = 5000
-        override val prefetchCount = 1
-    })
 
 
     val pubber = queue.getPublisher("test25", MyPublisher::class.java) as MyPublisher
 
-    println("SERVERS ${queue.queueServers}")
     pool.connect()
 
     client.call(mutableMapOf("testtttt" to 20), 5000, null)
@@ -162,7 +154,6 @@ class MyQueueServer(
         request: QueueMessage,
         delivery: Delivery
     ): Any? {
-
         logger.info("received $data")
         testX = "$data"
 

@@ -99,7 +99,6 @@ open class RPCServer(
 
 
     fun initialize() {
-        this.logger.info("RPC server mainloop started - $name")
         mainloop()
     }
 }

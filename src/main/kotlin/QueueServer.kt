@@ -26,7 +26,6 @@ open class QueueServer(
         request: QueueMessage,
         delivery: Delivery
     ): Any? {
-        logger.info("message")
         return super.callback(data, props, request, delivery)
     }
 
