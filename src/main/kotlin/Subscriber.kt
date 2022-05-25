@@ -9,9 +9,9 @@ open class Subscriber(
     open var connection: QueueConnection,
     open var logger: Logger,
     open val name: String,
-    open val options: ConnectionOptions? = object : ConnectionOptions {
+    open val options: ConnectionOptions = object : ConnectionOptions {
         override val maxRetry = 1
-        override val timeOutMs = 5000
+        override val timeOutMs = 10000
         override val prefetchCount = 1
     }
 ) {
@@ -45,10 +45,8 @@ open class Subscriber(
         CoroutineScope(Dispatchers.IO).launch {
             val request = unserialize(delivery.body)
 
-            if (request != null) {
-                if (request.status != "ok") {
-                    ack(channel, delivery)
-                }
+            if (request.status != "ok") {
+                ack(channel, delivery)
             }
 
             if (consumerTag != null) {
@@ -59,8 +57,8 @@ open class Subscriber(
                     retryMap[consumerTag] = counter
                 }
 
-                if (options?.maxRetry != null && delivery.envelope.isRedeliver) {
-                    if (counter > options!!.maxRetry!!) {
+                if (options.maxRetry != null && delivery.envelope.isRedeliver) {
+                    if (counter > options.maxRetry!!) {
                         logger.error("SUBSCRIBER TRIED TOO MANY TIMES $name, $request, ${delivery.body}")
                         ack(channel, delivery)
                         if (retryMap[consumerTag] != null) {
@@ -70,14 +68,16 @@ open class Subscriber(
                 }
             }
 
+            var timeOut: Int = options.timeOutMs
+
+            if (request.timeOut != null) {
+                timeOut = request.timeOut!!
+            }
+
             try {
-                options?.timeOutMs?.let {
-                    withTimeout(it.toLong()) {
-                        if (request != null) {
-                            request.data?.let { it1 -> callback(it1, delivery.properties, request, delivery) }
-                            println("JOB IS READY")
-                        }
-                    }
+                withTimeout(timeOut.toLong()) {
+                    request.data?.let { it -> callback(it, delivery.properties, request, delivery) }
+                    println("JOB IS READY")
                 }
             } catch (e: Exception) {
                 logger.error("TIMEOUT ${e.message}")

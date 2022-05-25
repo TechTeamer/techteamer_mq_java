@@ -19,7 +19,7 @@ interface RpcServerOptions {
 
 interface ConnectionOptions {
     val maxRetry: Int?
-    val timeOutMs: Int?
+    val timeOutMs: Int
     val prefetchCount: Int?
         get() = 1
 }

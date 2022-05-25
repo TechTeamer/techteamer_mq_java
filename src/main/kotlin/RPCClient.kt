@@ -11,7 +11,7 @@ open class RPCClient constructor(
     open val logger: Logger,
     open val options: RpcOptions = object : RpcOptions {
         override val queueMaxSize: Int = 100
-        override val timeOutMs: Int = 5000
+        override val timeOutMs: Int = 10000
         override val prefetchCount: Int = 1
     }
 ) {
@@ -38,8 +38,7 @@ open class RPCClient constructor(
         rpcOptions.channel(channel)
         rpcOptions.exchange(rpcName)
         rpcOptions.routingKey(keyName)
-        rpcOptions.timeout(rpcTimeOuts)
-        rpcOptions.replyTo(queue.queue)
+        rpcOptions.replyTo("$rpcName-reply")
 
         client = RpcClient(rpcOptions)
     }
@@ -69,8 +68,15 @@ open class RPCClient constructor(
 
             val props = AMQP.BasicProperties.Builder()
             props.correlationId(correlationId)
+            props.replyTo(UUID.randomUUID().toString())
 
-            val answer = timeOutMs?.let { client.primitiveCall(props.build(), param.serialize(), it) }
+            var timeOut: Int = options.timeOutMs
+
+            if (timeOutMs != null) {
+                timeOut = timeOutMs
+            }
+
+            val answer = timeOut.let { client.primitiveCall(props.build(), param.serialize(), timeOut) }
 
             correlationIdList.remove(correlationId)
 

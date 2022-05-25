@@ -8,11 +8,12 @@ private val gson = Gson()
 
 class QueueMessage(
     val status: String,
-    val data: MutableMap<String, Any?>?
+    val data: MutableMap<String, Any?>?,
+    var timeOut: Int? = null
 ) {
     val attachArray: MutableList<List<Any>> = mutableListOf()
     val attachments: MutableMap<String, ByteArray> = mutableMapOf()
-    var timeOut: Number = 30000
+
     fun addAttachment(name: String, bytes: ByteArray) {
         attachments[name] = bytes
     }
@@ -69,7 +70,7 @@ fun fromJsonToQueueMessage(message: String): QueueMessage {
         )
 
         if (mappedData["timeOut"] != null) {
-            messageBack.timeOut = mappedData["timeOut"] as Number
+            messageBack.timeOut = mappedData["timeOut"] as Int
         }
 
         return messageBack

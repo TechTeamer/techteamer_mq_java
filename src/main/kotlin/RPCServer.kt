@@ -28,9 +28,15 @@ open class RPCServer(
         var answer: MutableMap<String, Any?>? = null
         var timedOut = false
 
+        var timeOut: Int = options.timeOutMs
+
+        if (message.timeOut != null) {
+            timeOut = message.timeOut!!
+        }
+
         runBlocking {
             try {
-                withTimeout(options.timeOutMs.toLong()) {
+                withTimeout(timeOut.toLong()) {
                     answer = callback(message, delivery, response)
                 }
             } catch (e: Exception) {
