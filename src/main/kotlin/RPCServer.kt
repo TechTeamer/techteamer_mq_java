@@ -7,7 +7,7 @@ open class RPCServer(
     open val ch: Channel,
     open val name: String,
     val logger: Logger,
-    val options: RpcServerOptions = object : RpcServerOptions {
+    open val options: RpcServerOptions = object : RpcServerOptions {
         override val timeOutMs: Int = 10000
         override val prefetchCount: Int = 1
     }

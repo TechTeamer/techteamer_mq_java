@@ -18,7 +18,6 @@ class QueueManager(private val config: QueueConfig) {
     var queueServers = mutableMapOf<String, Any>()
     var queueClients = mutableMapOf<String, Any>()
     fun connect() {
-
         try {
             rpcServers.forEach { t ->
                 thread {
@@ -64,7 +63,14 @@ class QueueManager(private val config: QueueConfig) {
         if (rpcClients.contains(rpcName)) return rpcClients[rpcName]
 
         val myClass = OverrideClass as Class<RPCClient>
-        val rpcClient = myClass.constructors.last().newInstance(connection, rpcName, logger)
+        val rpcClient = myClass.constructors.last().newInstance(
+            connection,
+            rpcName,
+            logger,
+            object : RpcOptions {
+                override val queueMaxSize: Int = config.rpcQueueMaxSize
+                override val timeOutMs: Int = config.rpcTimeoutMs
+            })
 
         rpcClients[rpcName] = rpcClient
 
@@ -78,7 +84,9 @@ class QueueManager(private val config: QueueConfig) {
         ch.queueDeclare(rpcName, true, false, true, null)
 
         val myClass = OverrideClass as Class<RPCServer>
-        val rpcServer = myClass.constructors.last().newInstance(ch, rpcName, logger)
+        val rpcServer = myClass.constructors.last().newInstance(ch, rpcName, logger, object : RpcServerOptions {
+            override val timeOutMs: Int = config.rpcTimeoutMs
+        })
 
         rpcServers[rpcName] = rpcServer
 

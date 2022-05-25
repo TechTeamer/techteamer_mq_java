@@ -15,12 +15,6 @@ open class RPCClient constructor(
         override val prefetchCount: Int = 1
     }
 ) {
-
-
-    private val rpcQueueMaxSize = options.queueMaxSize
-    private val rpcTimeOuts = options.timeOutMs
-    private val prefetchCount = options.prefetchCount
-
     private lateinit var client: RpcClient
 
     private val keyName = "$rpcName-key"
@@ -32,7 +26,7 @@ open class RPCClient constructor(
         channel.exchangeDeclare(rpcName, "direct", true)
         val queue = channel.queueDeclare("$rpcName-reply", true, false, false, null)
         channel.queueBind(rpcName, rpcName, keyName)
-        channel.basicQos(prefetchCount)
+        channel.basicQos(options.prefetchCount)
 
         val rpcOptions = RpcClientParams()
         rpcOptions.channel(channel)
@@ -54,7 +48,7 @@ open class RPCClient constructor(
             correlationId = UUID.randomUUID().toString()
         } while (correlationIdList.contains(correlationId))
         try {
-            if (correlationIdList.size > rpcQueueMaxSize) {
+            if (correlationIdList.size > options.queueMaxSize) {
                 throw Exception("RPCCLIENT QUEUE FULL $rpcName")
             }
 

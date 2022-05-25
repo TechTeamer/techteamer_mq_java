@@ -1,15 +1,11 @@
 import com.rabbitmq.client.BasicProperties
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Delivery
-import kotlinx.coroutines.delay
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.util.UUID
-import java.util.concurrent.TimeUnit
 
 
 val logger: Logger = LoggerFactory.getLogger("testLogger")
-var testX: String? = null
 
 fun main() {
     val myLogger = logger
@@ -17,8 +13,7 @@ fun main() {
         override var url: String
             get() = "amqp://guest:guest@localhost:5672/"
             set(value) {}
-        override val options: String
-            get() = "Temp value"
+        override val options = null
         override val logger: Logger
             get() = myLogger
     }
@@ -101,8 +96,11 @@ fun main() {
 }
 
 class MyRPCClientt(
-    override val connection: QueueConnection, override val rpcName: String, override val logger: Logger
-) : RPCClient(connection, rpcName, logger) {
+    override val connection: QueueConnection,
+    override val rpcName: String,
+    override val logger: Logger,
+    override val options: RpcOptions
+) : RPCClient(connection, rpcName, logger, options) {
     override fun call(
         message: MutableMap<String, Any?>, timeOutMs: Int?, attachments: MutableMap<String, ByteArray>?
     ): ByteArray? {
@@ -115,8 +113,9 @@ class MyRPCClientt(
 }
 
 class MyRPCClient constructor(
-    override val connection: QueueConnection, override val rpcName: String, override val logger: Logger
-) : RPCClient(connection, rpcName, logger) {
+    override val connection: QueueConnection, override val rpcName: String, override val logger: Logger,
+    override val options: RpcOptions
+) : RPCClient(connection, rpcName, logger, options) {
 
 
     override fun call(
@@ -127,8 +126,13 @@ class MyRPCClient constructor(
     }
 }
 
-class MyFirstRpcServer(override val ch: Channel, override val name: String, logger: Logger) :
-    RPCServer(ch, name, logger) {
+class MyFirstRpcServer(
+    override val ch: Channel,
+    override val name: String,
+    logger: Logger,
+    override val options: RpcServerOptions
+) :
+    RPCServer(ch, name, logger, options) {
 
     override fun callback(
         data: QueueMessage,
@@ -155,7 +159,6 @@ class MyQueueServer(
         delivery: Delivery
     ): Any? {
         logger.info("received $data")
-        testX = "$data"
 
         return null
     }
