@@ -123,8 +123,8 @@ class MyRPCClient constructor(
 }
 
 class MyFirstRpcServer(
-    override val ch: Channel,
-    override val name: String,
+    ch: Channel,
+    name: String,
     logger: Logger,
     override val options: RpcServerOptions
 ) :

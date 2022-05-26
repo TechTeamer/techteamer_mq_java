@@ -2,10 +2,11 @@ import com.rabbitmq.client.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.slf4j.Logger
+import kotlin.reflect.KFunction5
 
 open class RPCServer(
-    open val ch: Channel,
-    open val name: String,
+    ch: Channel,
+    name: String,
     val logger: Logger,
     open val options: RpcServerOptions = object : RpcServerOptions {
         override val timeOutMs: Int = 10000
@@ -13,13 +14,8 @@ open class RPCServer(
     }
 ) : RpcServer(ch, name) {
 
-    open val actions = mutableMapOf<String, (
-        Any,
-        msg: MutableMap<String, Any?>,
-        delivery: Delivery,
-        response: QueueResponse,
-        data: QueueMessage
-    ) -> MutableMap<String, Any?>>()
+    open val actions =
+        mutableMapOf<String, KFunction5<Any, MutableMap<String, Any?>, Delivery, QueueResponse, QueueMessage, MutableMap<String, Any?>>>()
 
     override fun handleCall(delivery: Delivery, replyProperties: AMQP.BasicProperties?): ByteArray {
         val message: QueueMessage = unserialize(delivery.body)
@@ -82,13 +78,8 @@ open class RPCServer(
     }
 
     open fun registerAction(
-        action: String, handler: (
-            Any,
-            msg: MutableMap<String, Any?>,
-            delivery: Delivery,
-            response: QueueResponse,
-            data: QueueMessage
-        ) -> MutableMap<String, Any?>
+        action: String,
+        handler: KFunction5<Any, MutableMap<String, Any?>, Delivery, QueueResponse, QueueMessage, MutableMap<String, Any?>>
     ) {
         if (actions[action] != null) {
             logger.warn("Actions-handlers map already contains an action named $action")

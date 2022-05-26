@@ -15,12 +15,14 @@ repositories {
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
-    implementation ("com.rabbitmq:amqp-client:5.14.2")
-    implementation ("com.google.code.gson:gson:2.9.0")
-    implementation ("io.github.microutils:kotlin-logging-jvm:2.1.21")
-    implementation (group = "ch.qos.logback", name = "logback-classic", version = "1.2.6")
+    implementation("com.rabbitmq:amqp-client:5.14.2")
+    implementation("com.google.code.gson:gson:2.9.0")
+    implementation(group = "ch.qos.logback", name = "logback-classic", version = "1.2.6")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
+    testImplementation(kotlin("test"))
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("io.mockk:mockk:1.12.4")
+
 }
 
 tasks.test {
