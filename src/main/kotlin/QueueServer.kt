@@ -6,7 +6,11 @@ open class QueueServer(
     open val queueConnection: QueueConnection,
     override var logger: Logger,
     override val name: String,
-    override val options: ConnectionOptions
+    override val options: ConnectionOptions = object : ConnectionOptions {
+        override val maxRetry = 1
+        override val timeOutMs = 10000
+        override val prefetchCount = 1
+    }
 ) : Subscriber(queueConnection, logger, name, options) {
 
 
@@ -19,14 +23,5 @@ open class QueueServer(
         }
         channel.basicConsume(name, true, deliverCallback) { consumerTag: String? -> }
     }
-
-    override fun callback(
-        data: MutableMap<String, Any?>,
-        props: BasicProperties,
-        request: QueueMessage,
-        delivery: Delivery
-    ): Any? {
-        return super.callback(data, props, request, delivery)
-    }
-
+    
 }

@@ -15,11 +15,11 @@ open class RPCClient constructor(
         override val prefetchCount: Int = 1
     }
 ) {
+
     private lateinit var client: RpcClient
-
-    private val keyName = "$rpcName-key"
-
+    private var keyName = "$rpcName-key"
     private val correlationIdList = mutableListOf<String>()
+
 
     fun initialize() {
         val channel = connection.getChannel()
@@ -41,12 +41,13 @@ open class RPCClient constructor(
         message: MutableMap<String, Any?>,
         timeOutMs: Int? = null,
         attachments: MutableMap<String, ByteArray>? = null
-    ): ByteArray? {
+    ): QueueMessage? {
         var correlationId: String
 
         do {
             correlationId = UUID.randomUUID().toString()
         } while (correlationIdList.contains(correlationId))
+
         try {
             if (correlationIdList.size > options.queueMaxSize) {
                 throw Exception("RPCCLIENT QUEUE FULL $rpcName")
@@ -62,7 +63,6 @@ open class RPCClient constructor(
 
             val props = AMQP.BasicProperties.Builder()
             props.correlationId(correlationId)
-            props.replyTo(UUID.randomUUID().toString())
 
             var timeOut: Int = options.timeOutMs
 
@@ -74,11 +74,11 @@ open class RPCClient constructor(
 
             correlationIdList.remove(correlationId)
 
-            return answer
+            return unserialize(answer)
         } catch (err: Exception) {
             correlationIdList.remove(correlationId)
-            logger.error("RPCCLIENT: cannot make rpc call", err)
-            throw Exception("RPCCLIENT: cannot make rpc call", err)
+            logger.error("RPC CLIENT: cannot make rpc call", err)
+            throw Exception("RPC CLIENT: cannot make rpc call", err)
         }
 
     }

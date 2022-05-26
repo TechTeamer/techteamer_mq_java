@@ -12,7 +12,7 @@ class QueueMessage(
     var timeOut: Int? = null
 ) {
     val attachArray: MutableList<List<Any>> = mutableListOf()
-    val attachments: MutableMap<String, ByteArray> = mutableMapOf()
+    private val attachments: MutableMap<String, ByteArray> = mutableMapOf()
 
     fun addAttachment(name: String, bytes: ByteArray) {
         attachments[name] = bytes

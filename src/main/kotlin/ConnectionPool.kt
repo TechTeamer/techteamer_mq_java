@@ -9,7 +9,7 @@ class ConnectionPool(poolConfig: Map<String, String>) {
     lateinit var defaultConnection: QueueManager
 
     fun setupQueueManagers(connectionConfigs: Map<String, QueueConfig>) {
-        var defaultConnectionConfig: QueueConfig? = connectionConfigs["$defaultConnectionName"]
+        var defaultConnectionConfig: QueueConfig? = connectionConfigs[defaultConnectionName]
 
         if (defaultConnectionConfig != null) {
             val connection = createConnection(defaultConnectionConfig)
@@ -21,6 +21,9 @@ class ConnectionPool(poolConfig: Map<String, String>) {
             if (t.key == defaultConnectionName) return
             val connection = createConnection(t.value)
             registerConnection(t.key, connection)
+            if (!this::defaultConnection.isInitialized) {
+                defaultConnection = connection
+            }
         }
     }
 
@@ -29,7 +32,7 @@ class ConnectionPool(poolConfig: Map<String, String>) {
     }
 
     fun registerConnection(connectionName: String, connection: QueueManager) {
-        connections["$connectionName"] = connection
+        connections[connectionName] = connection
     }
 
     fun setLogger(loggerInput: Any) {
@@ -37,12 +40,11 @@ class ConnectionPool(poolConfig: Map<String, String>) {
     }
 
     fun getConnection(name: String): QueueManager? {
-        return connections["$name"]
+        return connections[name]
     }
 
     fun hasConnection(name:String): Boolean {
-        if (connections["$name"] != null) return true
-        return false
+        return connections[name] != null
     }
 
     fun connect() {

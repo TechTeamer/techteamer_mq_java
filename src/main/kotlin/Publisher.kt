@@ -2,7 +2,9 @@ import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.AMQP.BasicProperties
 import org.slf4j.Logger
 
-open class Publisher(open val queueConnection: QueueConnection, open val logger: Logger, open val exchange: String) {
+open class Publisher(
+    open val queueConnection: QueueConnection, open val logger: Logger, open val exchange: String
+) {
 
     open fun initialize() {
         val channel = queueConnection.getChannel()
@@ -13,7 +15,7 @@ open class Publisher(open val queueConnection: QueueConnection, open val logger:
         action: String,
         data: MutableMap<String, Any?>,
         correlationId: String? = null,
-        timeOut: Long? = null,
+        timeOut: Int? = null,
         attachments: MutableMap<String, ByteArray>
     ) {
         send(mutableMapOf("action" to action, "data" to data), correlationId, timeOut, attachments)
@@ -22,14 +24,14 @@ open class Publisher(open val queueConnection: QueueConnection, open val logger:
     open fun send(
         message: MutableMap<String, Any?>,
         correlationId: String? = null,
-        timeOut: Long? = null,
+        timeOut: Int? = null,
         attachments: MutableMap<String, ByteArray> = mutableMapOf()
     ) {
         var props = BasicProperties.Builder()
 
         try {
             val channel = queueConnection.getChannel()
-            val param = QueueMessage("ok", message)
+            val param = QueueMessage("ok", message, timeOut)
             if (correlationId != null) {
                 props.correlationId(correlationId)
             }
@@ -38,6 +40,7 @@ open class Publisher(open val queueConnection: QueueConnection, open val logger:
                     param.addAttachment(t.key, t.value)
                 }
             }
+
             channel.basicPublish(exchange, "", props.build(), param.serialize())
         } catch (error: java.lang.Exception) {
             logger.error("CANNOT PUBLISH MESSAGE, $exchange, $error")

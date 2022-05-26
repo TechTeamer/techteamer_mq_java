@@ -3,12 +3,12 @@ class QueueResponse(
     var statusCode: String? = "",
     var attachments: MutableMap<String, ByteArray> = mutableMapOf()
 ) {
-    val OK = "OK"
-    val NOT_FOUND = "NOT_FOUND"
-    val ERROR = "ERROR"
-    val statuses = mapOf(OK to OK, NOT_FOUND to NOT_FOUND, ERROR to ERROR)
+    private val OK = "OK"
+    private val NOT_FOUND = "NOT_FOUND"
+    private val ERROR = "ERROR"
+    private val statuses = mapOf(OK to OK, NOT_FOUND to NOT_FOUND, ERROR to ERROR)
 
-    fun setStatus(statusCode: String, statusMessage: String? = statuses[statusCode]) {
+    private fun setStatus(statusCode: String, statusMessage: String? = statuses[statusCode]) {
         this.statusCode = statusCode
         this.statusMessage = statusMessage
     }

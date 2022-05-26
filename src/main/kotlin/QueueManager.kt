@@ -56,37 +56,50 @@ class QueueManager(private val config: QueueConfig) {
     }
 
     fun setLogger(loggerInput: Any) {
-        logger = loggerInput as Logger
+        connection.logger = loggerInput as Logger
     }
 
     fun getRPCClient(rpcName: String, OverrideClass: Any, options: RpcOptions): Any? {
         if (rpcClients.contains(rpcName)) return rpcClients[rpcName]
+
+        var optionsToSet: RpcOptions = object : RpcOptions {
+            override val queueMaxSize: Int = config.rpcQueueMaxSize
+            override val timeOutMs: Int = config.rpcTimeoutMs
+        }
+
+        if (options != null) {
+            optionsToSet = options
+        }
 
         val myClass = OverrideClass as Class<RPCClient>
         val rpcClient = myClass.constructors.last().newInstance(
             connection,
             rpcName,
             logger,
-            object : RpcOptions {
-                override val queueMaxSize: Int = config.rpcQueueMaxSize
-                override val timeOutMs: Int = config.rpcTimeoutMs
-            })
+            optionsToSet
+        )
 
         rpcClients[rpcName] = rpcClient
 
         return rpcClient
     }
 
-    fun getRPCServer(rpcName: String, OverrideClass: Any, options: RpcOptions): Any? {
+    fun getRPCServer(rpcName: String, OverrideClass: Any, options: RpcServerOptions): Any? {
         if (rpcServers.contains(rpcName)) return rpcServers[rpcName]
+
+        var optionsToSet: RpcServerOptions = object : RpcServerOptions {
+            override val timeOutMs: Int = config.rpcTimeoutMs
+        }
+
+        if (options != null) {
+            optionsToSet = options
+        }
 
         val ch = connection.getChannel()
         ch.queueDeclare(rpcName, true, false, true, null)
 
         val myClass = OverrideClass as Class<RPCServer>
-        val rpcServer = myClass.constructors.last().newInstance(ch, rpcName, logger, object : RpcServerOptions {
-            override val timeOutMs: Int = config.rpcTimeoutMs
-        })
+        val rpcServer = myClass.constructors.last().newInstance(ch, rpcName, logger, optionsToSet)
 
         rpcServers[rpcName] = rpcServer
 
@@ -139,4 +152,3 @@ class QueueManager(private val config: QueueConfig) {
         return queueServer
     }
 }
-

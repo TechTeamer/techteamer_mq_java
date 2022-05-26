@@ -5,41 +5,38 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 
-val logger: Logger = LoggerFactory.getLogger("testLogger")
+val logger: Logger = LoggerFactory.getLogger("brandNewTestLogger")
 
 fun main() {
     val myLogger = logger
     var myConfig = object : QueueConfig {
-        override var url: String
-            get() = "amqp://guest:guest@localhost:5672/"
-            set(value) {}
+        override var url: String = "amqp://guest:guest@localhost:5672/"
         override val options = null
         override val logger: Logger
             get() = myLogger
     }
 
-    val pool = ConnectionPool(mapOf("defaultConnectionName" to "mydefaultname"))
+
+    val pool = ConnectionPool(mapOf("other" to "mydefaultname"))
+
+    pool.setLogger(logger)
 
     pool.setupQueueManagers(mapOf("mydefaultname" to myConfig))
 
     val queue = pool.defaultConnection
 
 
-    queue.getRPCServer("test3", MyFirstRpcServer::class.java, object : RpcOptions {
+    queue.getRPCServer("test3", MyFirstRpcServer::class.java, object : RpcServerOptions {
         override val prefetchCount: Int
             get() = 3
-        override val queueMaxSize: Int
-            get() = 5
         override val timeOutMs: Int
             get() = 10000
     })
 
 
-    queue.getRPCServer("test5", MyFirstRpcServer::class.java, object : RpcOptions {
+    queue.getRPCServer("test5", MyFirstRpcServer::class.java, object : RpcServerOptions {
         override val prefetchCount: Int
             get() = 3
-        override val queueMaxSize: Int
-            get() = 5
         override val timeOutMs: Int
             get() = 10000
     })
@@ -51,7 +48,7 @@ fun main() {
         override val queueMaxSize: Int
             get() = 5
         override val timeOutMs: Int
-            get() = 10000
+            get() = 15000
     }) as MyRPCClientt
 
 
@@ -61,7 +58,7 @@ fun main() {
         override val queueMaxSize: Int
             get() = 5
         override val timeOutMs: Int
-            get() = 10000
+            get() = 15000
     }) as MyRPCClient
 
     val server = queue.getQueueServer("test10", MyQueueServer::class.java, object : ConnectionOptions {
@@ -83,7 +80,7 @@ fun main() {
 
     pool.connect()
 
-    client.call(mutableMapOf("testtttt" to 20), 5000, null)
+    client.call(mutableMapOf("testtttt" to 20), timeOutMs = null, null)
 
     client0.call(mutableMapOf("testtttt00000" to 200000), 5000, null)
 
@@ -103,10 +100,10 @@ class MyRPCClientt(
 ) : RPCClient(connection, rpcName, logger, options) {
     override fun call(
         message: MutableMap<String, Any?>, timeOutMs: Int?, attachments: MutableMap<String, ByteArray>?
-    ): ByteArray? {
+    ): QueueMessage? {
         val result = super.call(message, timeOutMs, attachments)
 
-        logger.info(result?.let { String(it) })
+        logger.info("${result?.data}")
 
         return result
     }
@@ -120,8 +117,7 @@ class MyRPCClient constructor(
 
     override fun call(
         message: MutableMap<String, Any?>, timeOutMs: Int?, attachments: MutableMap<String, ByteArray>?
-    ): ByteArray? {
-        logger.info("started")
+    ): QueueMessage? {
         return super.call(message, timeOutMs, attachments)
     }
 }
