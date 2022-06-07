@@ -35,6 +35,7 @@ class QueueConnection constructor(config: QueueConfig) {
             factory.useSslProtocol(context)
         }
 
+        factory.setUri(config.url)
         connection = factory.newConnection(config.url)
     }
 

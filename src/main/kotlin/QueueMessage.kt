@@ -11,20 +11,20 @@ class QueueMessage(
     val data: MutableMap<String, Any?>?,
     var timeOut: Int? = null
 ) {
-    val attachArray: MutableList<List<Any>> = mutableListOf()
-    private val attachments: MutableMap<String, ByteArray> = mutableMapOf()
+    var attachArray: MutableList<List<Any>> = mutableListOf()
+    val attachments: MutableMap<String, ByteArray> = mutableMapOf()
 
     fun addAttachment(name: String, bytes: ByteArray) {
         attachments[name] = bytes
     }
 
     fun serialize(): ByteArray {
-        val attachmentBuffers = mutableListOf<ByteArray>()
+        var attachmentBuffers = byteArrayOf()
         val attachMap = mutableMapOf<String, Int>()
         val mapToJson = mutableMapOf("status" to status, "data" to data)
 
         attachments.forEach { entry ->
-            attachmentBuffers.add(entry.value)
+            attachmentBuffers += entry.value
             attachMap[entry.key] = entry.value.size
         }
 
@@ -33,7 +33,6 @@ class QueueMessage(
         }
 
         val stringJson = gson.toJson(mapToJson)
-        val attachmentJson = gson.toJson(attachmentBuffers)
 
         val formatBuf = "+".toByteArray()
 
@@ -43,7 +42,7 @@ class QueueMessage(
 
         val jsonBuf = stringJson.toByteArray()
 
-        return formatBuf + lengthBuf.array() + jsonBuf + attachmentJson.toByteArray()
+        return formatBuf + lengthBuf.array() + jsonBuf + attachmentBuffers
     }
 
 }
@@ -71,6 +70,10 @@ fun fromJsonToQueueMessage(message: String): QueueMessage {
 
         if (mappedData["timeOut"] != null) {
             messageBack.timeOut = mappedData["timeOut"] as Int
+        }
+
+        if (mappedData["attachArray"] != null) {
+            messageBack.attachArray = mappedData["attachArray"] as MutableList<List<Any>>
         }
 
         return messageBack

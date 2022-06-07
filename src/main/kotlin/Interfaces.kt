@@ -1,9 +1,11 @@
 import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 interface QueueConfig {
     var url: String
     val options: RabbitMqOptions?
     val logger: Logger
+        get() = LoggerFactory.getLogger("mq-logger")
     val rpcTimeoutMs: Int
         get() = 10000
     val rpcQueueMaxSize: Int

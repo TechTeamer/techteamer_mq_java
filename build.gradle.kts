@@ -19,8 +19,8 @@ dependencies {
     implementation("com.google.code.gson:gson:2.9.0")
     implementation(group = "ch.qos.logback", name = "logback-classic", version = "1.2.6")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
-    testImplementation(kotlin("test"))
-    testImplementation("junit:junit:4.13.2")
+    implementation("org.jetbrains.kotlin:kotlin-test-junit:1.6.20")
+    testImplementation("junit:junit:4.12")
     testImplementation("io.mockk:mockk:1.12.4")
 
 }

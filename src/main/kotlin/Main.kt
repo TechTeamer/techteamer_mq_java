@@ -10,12 +10,11 @@ val logger: Logger = LoggerFactory.getLogger("brandNewTestLogger")
 fun main() {
     val myLogger = logger
     var myConfig = object : QueueConfig {
-        override var url: String = "amqp://guest:guest@localhost:5672/"
+        override var url: String = "amqp://guest:guest@localhost:5672"
         override val options = null
         override val logger: Logger
             get() = myLogger
     }
-
 
     val pool = ConnectionPool(mapOf("other" to "mydefaultname"))
 
@@ -154,7 +153,7 @@ class MyQueueServer(
         request: QueueMessage,
         delivery: Delivery
     ): Any? {
-        logger.info("received $data")
+        logger.info("received $data, ${request.attachments}")
 
         return null
     }
@@ -198,7 +197,9 @@ class MySubscriber(
         request: QueueMessage,
         delivery: Delivery
     ): Any? {
-        logger.info("received $data")
+        val att = request.attachments["testtttt"]
+        val attTwo = request.attachments["testtttteszt2t"]
+        logger.info("received $data, ${att?.let { String(it) }}, ${attTwo?.let { String(it) }}")
         return null
     }
 }
