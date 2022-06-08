@@ -14,8 +14,13 @@ open class RPCServer(
     }
 ) : RpcServer(ch, name) {
 
-    open val actions =
-        mutableMapOf<String, KFunction5<Any, MutableMap<String, Any?>, Delivery, QueueResponse, QueueMessage, MutableMap<String, Any?>>>()
+    open val actions = mutableMapOf<String, (
+        Any,
+        data: MutableMap<String, Any?>,
+        delivery: Delivery,
+        response: QueueResponse,
+        request: QueueMessage
+    ) -> MutableMap<String, Any?>?>()
 
     override fun handleCall(delivery: Delivery, replyProperties: AMQP.BasicProperties?): ByteArray {
         val message: QueueMessage = unserialize(delivery.body)
@@ -29,6 +34,7 @@ open class RPCServer(
         if (message.timeOut != null) {
             timeOut = message.timeOut!!
         }
+
 
         runBlocking {
             try {
@@ -66,11 +72,11 @@ open class RPCServer(
 
     }
 
-    open fun callback(
+    open suspend fun callback(
         data: QueueMessage,
         delivery: Delivery,
         response: QueueResponse,
-    ): MutableMap<String, Any?> {
+    ): MutableMap<String, Any?>? = run {
         if ((data.data?.get("action") != null) && (actions[data.data["action"]] != null)) {
             return actions[data.data["action"]]!!.invoke(this, data.data, delivery, response, data)
         }
@@ -78,8 +84,13 @@ open class RPCServer(
     }
 
     open fun registerAction(
-        action: String,
-        handler: KFunction5<Any, MutableMap<String, Any?>, Delivery, QueueResponse, QueueMessage, MutableMap<String, Any?>>
+        action: String, handler: (
+            Any,
+            data: MutableMap<String, Any?>,
+            delivery: Delivery,
+            response: QueueResponse,
+            request: QueueMessage
+        ) -> MutableMap<String, Any?>?
     ) {
         if (actions[action] != null) {
             logger.warn("Actions-handlers map already contains an action named $action")

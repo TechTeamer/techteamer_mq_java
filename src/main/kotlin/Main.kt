@@ -102,17 +102,16 @@ class MyRPCClientt(
     ): QueueMessage? {
         val result = super.call(message, timeOutMs, attachments)
 
-        logger.info("${result?.data}")
+        logger.info("rpc - ${result?.data}")
 
         return result
     }
 }
 
-class MyRPCClient constructor(
+class MyRPCClient (
     override val connection: QueueConnection, override val rpcName: String, override val logger: Logger,
     override val options: RpcOptions
 ) : RPCClient(connection, rpcName, logger, options) {
-
 
     override fun call(
         message: MutableMap<String, Any?>, timeOutMs: Int?, attachments: MutableMap<String, ByteArray>?
@@ -129,7 +128,7 @@ class MyFirstRpcServer(
 ) :
     RPCServer(ch, name, logger, options) {
 
-    override fun callback(
+    override suspend fun callback(
         data: QueueMessage,
         delivery: Delivery,
         response: QueueResponse,

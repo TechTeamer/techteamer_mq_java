@@ -16,7 +16,7 @@ open class Publisher(
         data: MutableMap<String, Any?>,
         correlationId: String? = null,
         timeOut: Int? = null,
-        attachments: MutableMap<String, ByteArray>
+        attachments: MutableMap<String, ByteArray> = mutableMapOf()
     ) {
         send(mutableMapOf("action" to action, "data" to data), correlationId, timeOut, attachments)
     }

@@ -4,10 +4,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import kotlin.test.assertEquals
-import kotlin.test.assertFails
-import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 private var sendStringResult: QueueMessage? = null
@@ -39,8 +35,9 @@ class PubSubTest {
 
     @Test
     fun sendWithAttachment() = runBlocking {
+        delay(200)
         publisher.sendIt("testMessage")
-        delay(500)
+        delay(200)
         assertTrue {
             val testData = sendStringResult?.data?.get("data") as Map<*, *>?
             return@assertTrue testData?.get("testData") == "testMessage" &&
@@ -54,30 +51,27 @@ class PubSubTest {
     fun sendToMoreSubscribers() = runBlocking {
         val otherSubManager = QueueManager(testhelper.testConfig)
 
-        val otherSubscriber =
-            otherSubManager.getSubscriber(publisherName, MyTestSubscriberTwo::class.java, object : ConnectionOptions {
-                override val maxRetry = 1
-                override val timeOutMs = 5000
-                override val prefetchCount = 1
-            }) as MyTestSubscriberTwo
+        otherSubManager.getSubscriber(publisherName, MyTestSubscriberTwo::class.java, object : ConnectionOptions {
+            override val maxRetry = 1
+            override val timeOutMs = 5000
+            override val prefetchCount = 1
+        }) as MyTestSubscriberTwo
 
         otherSubManager.connect()
+        delay(200)
 
         publisher.sendIt("testNewMessage")
-        delay(1000)
+        delay(200)
 
         assertTrue {
             val testData = sendStringResult?.data?.get("data") as Map<*, *>?
             val testDataTwo = sendStringResultTwo?.data?.get("data") as Map<*, *>?
 
-            println(sendStringResultTwo?.attachments?.get("otherTest")
-                ?.let { String(it) })
-
-            return@assertTrue testData?.get("testData") == "testMessage" &&
+            return@assertTrue testData?.get("testData") == "testNewMessage" &&
                     sendStringResult?.attachments?.get("otherTest")
                         ?.let { String(it) } == "testHello" &&
                     sendStringResult?.data?.get("action") == "send" &&
-                    testDataTwo?.get("testData") == "testMessage" &&
+                    testDataTwo?.get("testData") == "testNewMessage" &&
                     sendStringResultTwo?.attachments?.get("otherTest")
                         ?.let { String(it) } == "testHello" &&
                     sendStringResultTwo?.data?.get("action") == "send"

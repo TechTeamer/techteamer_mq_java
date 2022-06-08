@@ -37,10 +37,14 @@ open class RPCClient constructor(
         client = RpcClient(rpcOptions)
     }
 
+    open fun callAction(
+        action: String, data: MutableMap<String, Any?>, timeOutMs: Int?, attachments: MutableMap<String, ByteArray>?
+    ): QueueMessage? {
+        return call(mutableMapOf("action" to action, "data" to data), timeOutMs, attachments)
+    }
+
     open fun call(
-        message: MutableMap<String, Any?>,
-        timeOutMs: Int? = null,
-        attachments: MutableMap<String, ByteArray>? = null
+        message: MutableMap<String, Any?>, timeOutMs: Int? = null, attachments: MutableMap<String, ByteArray>? = null
     ): QueueMessage? {
         var correlationId: String
 

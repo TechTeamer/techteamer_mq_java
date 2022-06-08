@@ -31,9 +31,9 @@ open class Subscriber(
     open fun initialize() {
         val channel = connection.getChannel()
         channel.exchangeDeclare(name, "fanout", true)
-        channel.queueDeclare(name, true, false, false, null)?.queue;
-        channel.queueBind(name, name, "")
-        channel.basicConsume(name, true, deliverCallback) { consumerTag: String? -> }
+        val queueName = channel.queueDeclare("", true, true, false, null)?.queue;
+        channel.queueBind(queueName, name, "")
+        channel.basicConsume(queueName, true, deliverCallback) { consumerTag: String? -> }
     }
 
     open val deliverCallback = DeliverCallback { consumerTag: String?, delivery: Delivery ->
