@@ -2,8 +2,6 @@ dist: focal
 language: java
 
 addons:
-  sonarcloud:
-    organization: "techteamer"
   apt:
     packages:
       - rabbitmq-server
@@ -16,5 +14,4 @@ before_install:
   - chmod +x gradle/wrapper/gradle-wrapper.jar
 
 script:
-  - ./gradlew sonarqube
-  - ./gradlew test build
+  - ./gradlew test build --info
