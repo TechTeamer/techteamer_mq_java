@@ -11,6 +11,10 @@ addons:
 env:
   - TEST_ENV=travis
 
+before_install:
+  - chmod +x gradlew
+  - chmod +x gradle/wrapper/gradle-wrapper.jar
+
 script:
   - ./gradlew sonarqube
   - ./gradlew test build
