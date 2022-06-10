@@ -2,19 +2,19 @@ import org.junit.Test
 import kotlin.test.assertTrue
 
 class RPCActionTest {
-    val rpcName = "test-rpc-action"
+    private val rpcName = "test-rpc-action"
     private val testhelper = TestHelper()
 
     private val queueManager = QueueManager(testhelper.testConfig)
 
-    val rpcServer = queueManager.getRPCServer(rpcName, options = object : RpcServerOptions {
+    private val rpcServer = queueManager.getRPCServer(rpcName, options = object : RpcServerOptions {
         override val prefetchCount: Int
             get() = 3
         override val timeOutMs: Int
             get() = 10000
     }) as RPCServer
 
-    val rpcClient = queueManager.getRPCClient(rpcName, options = object : RpcOptions {
+    private val rpcClient = queueManager.getRPCClient(rpcName, options = object : RpcOptions {
         override val prefetchCount: Int
             get() = 3
         override val queueMaxSize: Int
@@ -31,7 +31,7 @@ class RPCActionTest {
 
     @Test
     fun registerRPCActionTest() {
-        rpcServer.registerAction("testAction") { thiss, data, delivery, response, message ->
+        rpcServer.registerAction("testAction") { _, _, _, response, message ->
             testRegisteredData = message
             response.addAttachment("testAttachmentAnswer", "helloAnswer".toByteArray())
             return@registerAction mutableMapOf<String, Any?>("testAnswer" to "answer")
