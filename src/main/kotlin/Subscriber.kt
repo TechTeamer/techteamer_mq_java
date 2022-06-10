@@ -33,7 +33,7 @@ open class Subscriber(
         channel.exchangeDeclare(name, "fanout", true)
         val queueName = channel.queueDeclare("", true, true, false, null)?.queue;
         channel.queueBind(queueName, name, "")
-        channel.basicConsume(queueName, true, deliverCallback) { consumerTag: String? -> }
+        channel.basicConsume(queueName, true, deliverCallback) { _: String? -> } // consumerTag parameter
     }
 
     open val deliverCallback = DeliverCallback { consumerTag: String?, delivery: Delivery ->
@@ -57,13 +57,11 @@ open class Subscriber(
                     retryMap[consumerTag] = counter
                 }
 
-                if (options.maxRetry != null && delivery.envelope.isRedeliver) {
-                    if (counter > options.maxRetry!!) {
-                        logger.error("SUBSCRIBER TRIED TOO MANY TIMES $name, $request, ${delivery.body}")
-                        ack(channel, delivery)
-                        if (retryMap[consumerTag] != null) {
-                            retryMap.remove(consumerTag)
-                        }
+                if (options.maxRetry != null && delivery.envelope.isRedeliver && counter > options.maxRetry!!) {
+                    logger.error("SUBSCRIBER TRIED TOO MANY TIMES $name, $request, ${delivery.body}")
+                    ack(channel, delivery)
+                    if (retryMap[consumerTag] != null) {
+                        retryMap.remove(consumerTag)
                     }
                 }
             }

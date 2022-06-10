@@ -14,7 +14,4 @@ before_install:
   - chmod +x gradle/wrapper/gradle-wrapper.jar
 
 script:
-  - ./gradlew test --debug
-
-after_failure:
-  - cat /home/travis/build/TechTeamer/techteamer_mq_java/build/test-results/test
+  - ./gradlew test

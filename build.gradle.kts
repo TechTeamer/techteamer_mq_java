@@ -22,8 +22,6 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-test-junit:1.6.20")
     testImplementation("junit:junit:4.12")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.8.2")
-    testImplementation("io.mockk:mockk:1.12.4")
-
 }
 
 tasks.test {

@@ -54,7 +54,7 @@ class QueueManager(private val config: QueueConfig) {
         connection.logger = loggerInput as Logger
     }
 
-    fun getRPCClient(rpcName: String, OverrideClass: Any = RPCClient::class.java, options: RpcOptions): Any? {
+    fun getRPCClient(rpcName: String, overrideClass: Any = RPCClient::class.java, options: RpcOptions?): Any? {
         if (rpcClients.contains(rpcName)) return rpcClients[rpcName]
 
         var optionsToSet: RpcOptions = object : RpcOptions {
@@ -66,7 +66,7 @@ class QueueManager(private val config: QueueConfig) {
             optionsToSet = options
         }
 
-        val myClass = OverrideClass as Class<RPCClient>
+        val myClass = overrideClass as Class<RPCClient>
         val rpcClient = myClass.constructors.first().newInstance(
             connection,
             rpcName,
@@ -79,7 +79,7 @@ class QueueManager(private val config: QueueConfig) {
         return rpcClient
     }
 
-    fun getRPCServer(rpcName: String, OverrideClass: Any = RPCServer::class.java, options: RpcServerOptions): Any? {
+    fun getRPCServer(rpcName: String, overrideClass: Any = RPCServer::class.java, options: RpcServerOptions?): Any? {
         if (rpcServers.contains(rpcName)) return rpcServers[rpcName]
 
         var optionsToSet: RpcServerOptions = object : RpcServerOptions {
@@ -93,7 +93,7 @@ class QueueManager(private val config: QueueConfig) {
         val ch = connection.getChannel()
         ch.queueDeclare(rpcName, true, false, true, null)
 
-        val myClass = OverrideClass as Class<RPCServer>
+        val myClass = overrideClass as Class<RPCServer>
         val rpcServer = myClass.constructors.first().newInstance(ch, rpcName, logger, optionsToSet)
 
         rpcServers[rpcName] = rpcServer
@@ -101,10 +101,10 @@ class QueueManager(private val config: QueueConfig) {
         return rpcServer
     }
 
-    fun getPublisher(exchangeName: String, OverrideClass: Any = Publisher::class.java): Any? {
+    fun getPublisher(exchangeName: String, overrideClass: Any = Publisher::class.java): Any? {
         if (publishers.contains(exchangeName)) return publishers[exchangeName]
 
-        val myClass = OverrideClass as Class<Publisher>
+        val myClass = overrideClass as Class<Publisher>
         val publisher = myClass.constructors.first().newInstance(connection, logger, exchangeName)
 
         publishers[exchangeName] = publisher
@@ -112,10 +112,10 @@ class QueueManager(private val config: QueueConfig) {
         return publisher
     }
 
-    fun getSubscriber(exchangeName: String, OverrideClass: Any = Subscriber::class.java, options: ConnectionOptions): Any? {
+    fun getSubscriber(exchangeName: String, overrideClass: Any = Subscriber::class.java, options: ConnectionOptions): Any? {
         if (subscribers.contains(exchangeName)) return subscribers[exchangeName]
 
-        val myClass = OverrideClass as Class<Subscriber>
+        val myClass = overrideClass as Class<Subscriber>
         val subscriber = myClass.constructors.first().newInstance(connection, logger, exchangeName, options)
 
         subscribers[exchangeName] = subscriber
@@ -123,10 +123,10 @@ class QueueManager(private val config: QueueConfig) {
         return subscriber
     }
 
-    fun getQueueClient(queueName: String, OverrideClass: Any = QueueClient::class.java): Any? {
+    fun getQueueClient(queueName: String, overrideClass: Any = QueueClient::class.java): Any? {
         if (queueClients.contains(queueName)) return queueClients[queueName]
 
-        val myClass = OverrideClass as Class<QueueClient>
+        val myClass = overrideClass as Class<QueueClient>
         val queueClient = myClass.constructors.first().newInstance(connection, logger, queueName)
 
         queueClients[queueName] = queueClient
@@ -135,11 +135,11 @@ class QueueManager(private val config: QueueConfig) {
     }
 
     fun getQueueServer(
-        queueName: String, OverrideClass: Any = QueueServer::class.java, options: ConnectionOptions
+        queueName: String, overrideClass: Any = QueueServer::class.java, options: ConnectionOptions
     ): Any? {
         if (queueServers.contains(queueName)) return queueServers[queueName]
 
-        val myClass = OverrideClass as Class<QueueServer>
+        val myClass = overrideClass as Class<QueueServer>
         val queueServer = myClass.constructors.first().newInstance(connection, logger, queueName, options)
 
         queueServers[queueName] = queueServer
