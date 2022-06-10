@@ -4,7 +4,6 @@ plugins {
     kotlin("jvm") version "1.6.20"
     `maven-publish`
     application
-    id("org.sonarqube") version "3.4.0.2513"
 }
 
 group = "org.TechTeamer"
@@ -22,6 +21,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
     implementation("org.jetbrains.kotlin:kotlin-test-junit:1.6.20")
     testImplementation("junit:junit:4.12")
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.8.2")
     testImplementation("io.mockk:mockk:1.12.4")
 
 }
@@ -38,6 +38,10 @@ application {
     mainClass.set("MainKt")
 }
 
+buildscript {
+
+}
+
 publishing {
     publications {
         create<MavenPublication>("maven") {
@@ -50,8 +54,3 @@ publishing {
     }
 }
 
-sonarqube {
-    properties {
-        property("sonar.projectKey", "TechTeamer_techteamer_mq_java")
-    }
-}
