@@ -67,8 +67,8 @@ class RPCTest {
         assertTrue {
             val res = rpcClientTwo.sendTest()
 
-            return@assertTrue res?.status == "error" &&
-                    res?.data?.get("error") == "timeout"
+            return@assertTrue (res?.status == "error") &&
+                    (res.data?.get("error") == "timeout")
         }
     }
 

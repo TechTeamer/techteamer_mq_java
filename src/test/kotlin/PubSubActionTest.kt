@@ -31,7 +31,7 @@ class PubSubActionTest {
     @Test
     fun testSubscriberRegisterAction() = runBlocking {
 
-        subscriber.registerAction("testAction") { thiss, data, props, request, delivery ->
+        subscriber.registerAction("testAction") { _, _, _, request, _ ->
             testResult = request
             return@registerAction testResult!!
         }
