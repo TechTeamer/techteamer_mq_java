@@ -1,5 +1,4 @@
 import com.rabbitmq.client.AMQP
-import com.rabbitmq.client.Channel
 import com.rabbitmq.client.RpcClient
 import com.rabbitmq.client.RpcClientParams
 import org.slf4j.Logger
@@ -24,7 +23,8 @@ open class RPCClient constructor(
     fun initialize() {
         val channel = connection.getChannel()
         channel.exchangeDeclare(rpcName, "direct", true)
-        val queue = channel.queueDeclare("$rpcName-reply", true, false, false, null)
+        channel.queueDeclare("$rpcName-reply", true, false, false, null)
+        channel.queueDeclare(rpcName, true, false, true, null)
         channel.queueBind(rpcName, rpcName, keyName)
         channel.basicQos(options.prefetchCount)
 

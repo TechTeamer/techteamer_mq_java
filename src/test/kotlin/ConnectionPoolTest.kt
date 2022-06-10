@@ -26,13 +26,12 @@ class ConnectionPoolTest {
         pool.setLogger(testhelper.logger)
         pool.setupQueueManagers(mapOf("mydefaultname" to testhelper.testConfig, "other" to testhelper.testConfig))
         pool.connect()
-
     }
 
     @Test
     fun testConnectFail() {
         val myWrongConfig = object : QueueConfig {
-            override var url: String = "amqp://guest:gue@localhost:67/"
+            override var url = "amqp://guest:gue@localhost:67/"
             override val options = null
         }
 
@@ -44,7 +43,5 @@ class ConnectionPoolTest {
             pool.setupQueueManagers(mapOf("defaultt" to myWrongConfig))
             pool.connect()
         }
-
     }
-
 }

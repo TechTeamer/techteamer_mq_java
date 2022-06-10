@@ -17,7 +17,8 @@ interface RabbitMqOptions {
         get() = false
     val key: String
     val trust: String
-
+    val trustPwd: CharArray
+    val keyPwd: CharArray
 }
 
 interface RpcOptions {

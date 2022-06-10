@@ -31,13 +31,11 @@ class RPCActionTest {
 
     @Test
     fun registerRPCActionTest() {
-
         rpcServer.registerAction("testAction") { thiss, data, delivery, response, message ->
             testRegisteredData = message
             response.addAttachment("testAttachmentAnswer", "helloAnswer".toByteArray())
             return@registerAction mutableMapOf<String, Any?>("testAnswer" to "answer")
         }
-
 
         val result = rpcClient.callAction(
             "testAction",
@@ -52,8 +50,6 @@ class RPCActionTest {
                     result?.data?.get("testAnswer") == "answer" &&
                     testRegisteredData?.attachments?.get("testAttachment")?.let { String(it) } == "helloTest" &&
                     result.attachments["testAttachmentAnswer"]?.let { String(it) } == "helloAnswer"
-
         }
     }
-
 }

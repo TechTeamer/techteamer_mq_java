@@ -18,13 +18,13 @@ class QueueConnection constructor(config: QueueConfig) {
     init {
         if (config.options != null) {
             val keyStore = KeyStore.getInstance("PKCS12")
-            keyStore.load(FileInputStream(config.options!!.key), null)
+            keyStore.load(FileInputStream(config.options!!.key), config.options!!.keyPwd)
 
             val keyMngF = KeyManagerFactory.getInstance("SunX509")
-            keyMngF.init(keyStore, null)
+            keyMngF.init(keyStore, config.options!!.keyPwd)
 
             val trustStore = KeyStore.getInstance("JKS")
-            trustStore.load(FileInputStream(config.options!!.trust), null)
+            trustStore.load(FileInputStream(config.options!!.trust), config.options!!.trustPwd)
 
             val tmf = TrustManagerFactory.getInstance("SunX509");
             tmf.init(trustStore)

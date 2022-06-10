@@ -43,7 +43,6 @@ class RPCTest {
                     rpcServerTestResult?.data?.get("testData") == "test" &&
                     rpcServerTestResult?.attachments?.contains("testAttachment") == true
         }
-
     }
 
     @Test
@@ -70,7 +69,6 @@ class RPCTest {
 
             return@assertTrue res?.status == "error" &&
                     res?.data?.get("error") == "timeout"
-
         }
     }
 

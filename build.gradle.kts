@@ -6,7 +6,7 @@ plugins {
     application
 }
 
-group = "org.example"
+group = "org.TechTeamer"
 version = "1.0"
 
 repositories {
@@ -40,9 +40,9 @@ application {
 publishing {
     publications {
         create<MavenPublication>("maven") {
-            groupId = "org.gradle.sample"
-            artifactId = "library"
-            version = "1.1"
+            groupId = "org.TechTeamer"
+            artifactId = "Kotlin_MQ"
+            version = "1.0"
 
             from(components["java"])
         }
