@@ -15,3 +15,6 @@ before_install:
 
 script:
   - ./gradlew test build --info
+
+after_failure:
+  - cat /home/travis/build/TechTeamer/techteamer_mq_java/build/test-results/test
