@@ -1,0 +1,16 @@
+dist: focal
+language: java
+
+addons:
+  sonarcloud:
+    organization: "techteamer"
+  apt:
+    packages:
+      - rabbitmq-server
+
+env:
+  - TEST_ENV=travis
+
+script:
+  - ./gradlew sonarqube
+  - ./gradlew test build

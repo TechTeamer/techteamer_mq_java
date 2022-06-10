@@ -4,6 +4,7 @@ plugins {
     kotlin("jvm") version "1.6.20"
     `maven-publish`
     application
+    id("org.sonarqube") version "3.4.0.2513"
 }
 
 group = "org.TechTeamer"
@@ -49,3 +50,8 @@ publishing {
     }
 }
 
+sonarqube {
+    properties {
+        property("sonar.projectKey", "TechTeamer_techteamer_mq_java")
+    }
+}
