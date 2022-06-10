@@ -6,7 +6,6 @@ open class QueueClient(
     open val name: String
     ) : Publisher(queueConnection, logger, name) {
 
-
     override fun initialize() {
         val channel = queueConnection.getChannel()
         channel.exchangeDeclare(name, "direct", true)

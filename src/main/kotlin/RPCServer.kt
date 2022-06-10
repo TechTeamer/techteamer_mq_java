@@ -2,7 +2,6 @@ import com.rabbitmq.client.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.slf4j.Logger
-import kotlin.reflect.KFunction5
 
 open class RPCServer(
     ch: Channel,
@@ -54,7 +53,7 @@ open class RPCServer(
         val replyAttachments = response.attachments
 
         return try {
-            var reply: QueueMessage? = null
+            val reply: QueueMessage?
 
             if (answer != null) {
                 reply = QueueMessage("ok", answer)

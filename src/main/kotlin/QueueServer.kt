@@ -1,5 +1,3 @@
-import com.rabbitmq.client.BasicProperties
-import com.rabbitmq.client.Delivery
 import org.slf4j.Logger
 
 open class QueueServer(
@@ -21,7 +19,7 @@ open class QueueServer(
         if (prefetchCount != null) {
             channel.basicQos(prefetchCount)
         }
-        channel.basicConsume(name, true, deliverCallback) { consumerTag: String? -> }
+        channel.basicConsume(name, true, deliverCallback) { _: String? -> } // consumerTag parameter
     }
     
 }
