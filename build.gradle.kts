@@ -55,6 +55,7 @@ publishing {
 
 sonarqube {
     properties {
-        property ("sonar.projectKey", "TechTeamer_techteamer_mq_java")
+        property("sonar.projectKey", "TechTeamer_techteamer_mq_java")
+        property("sonar.organization", "techteamer")
     }
 }
