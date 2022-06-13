@@ -1,3 +1,5 @@
+package com.facekom.mq_kotlin
+
 import com.rabbitmq.client.BasicProperties
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.DeliverCallback

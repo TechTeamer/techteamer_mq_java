@@ -1,3 +1,5 @@
+package com.facekom.mq_kotlin
+
 import com.rabbitmq.client.AMQP.BasicProperties
 import org.slf4j.Logger
 

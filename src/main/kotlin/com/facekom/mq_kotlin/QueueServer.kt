@@ -1,3 +1,5 @@
+package com.facekom.mq_kotlin
+
 import org.slf4j.Logger
 
 open class QueueServer(

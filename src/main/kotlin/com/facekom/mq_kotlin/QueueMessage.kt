@@ -1,3 +1,5 @@
+package com.facekom.mq_kotlin
+
 import com.google.gson.Gson
 import com.google.gson.JsonParser
 import java.math.BigInteger

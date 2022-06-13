@@ -1,6 +1,7 @@
+import com.facekom.mq_kotlin.ConnectionPool
+import com.facekom.mq_kotlin.QueueConfig
+import com.facekom.mq_kotlin.QueueManager
 import org.junit.Test
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import kotlin.test.assertFails
 import kotlin.test.assertIs
 import kotlin.test.assertTrue

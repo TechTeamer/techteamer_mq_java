@@ -1,3 +1,6 @@
+import com.facekom.mq_kotlin.QueueMessage
+import com.facekom.mq_kotlin.fromJsonToQueueMessage
+import com.facekom.mq_kotlin.unserialize
 import org.junit.Test
 import kotlin.test.assertIs
 import kotlin.test.assertTrue

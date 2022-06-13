@@ -1,3 +1,5 @@
+package com.facekom.mq_kotlin
+
 class QueueResponse(
     var statusMessage: String? = "",
     var statusCode: String? = "",

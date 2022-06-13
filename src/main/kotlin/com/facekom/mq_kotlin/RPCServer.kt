@@ -1,3 +1,5 @@
+package com.facekom.mq_kotlin
+
 import com.rabbitmq.client.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout

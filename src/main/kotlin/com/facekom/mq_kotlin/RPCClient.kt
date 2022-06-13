@@ -1,3 +1,5 @@
+package com.facekom.mq_kotlin
+
 import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.RpcClient
 import com.rabbitmq.client.RpcClientParams

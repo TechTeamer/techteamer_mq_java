@@ -1,3 +1,5 @@
+import com.facekom.mq_kotlin.QueueConfig
+import com.facekom.mq_kotlin.RabbitMqOptions
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -18,7 +20,7 @@ class TestHelper {
 
     init {
         if (System.getenv("TEST_ENV") == "travis" ) {
-            testConfig = object :QueueConfig {
+            testConfig = object : QueueConfig {
                 override var url = "amqp://guest:guest@localhost:5672"
                 override val options = null
             }

@@ -1,3 +1,4 @@
+import com.facekom.mq_kotlin.*
 import com.rabbitmq.client.BasicProperties
 import com.rabbitmq.client.Delivery
 import kotlinx.coroutines.delay

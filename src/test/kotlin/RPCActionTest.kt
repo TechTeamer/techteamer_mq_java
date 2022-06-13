@@ -1,3 +1,4 @@
+import com.facekom.mq_kotlin.*
 import org.junit.Test
 import kotlin.test.assertTrue
 

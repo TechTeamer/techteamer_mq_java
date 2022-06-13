@@ -1,3 +1,4 @@
+import com.facekom.mq_kotlin.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.Test

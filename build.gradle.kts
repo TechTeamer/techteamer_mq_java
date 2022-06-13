@@ -4,9 +4,10 @@ plugins {
     kotlin("jvm") version "1.6.20"
     `maven-publish`
     application
+    id ("org.sonarqube") version "3.3"
 }
 
-group = "org.TechTeamer"
+group = "com.facekom"
 version = "1.0"
 
 repositories {
@@ -43,8 +44,8 @@ buildscript {
 publishing {
     publications {
         create<MavenPublication>("maven") {
-            groupId = "org.TechTeamer"
-            artifactId = "Kotlin_MQ"
+            groupId = "com.facekom"
+            artifactId = "mq_kotlin"
             version = "1.0"
 
             from(components["java"])
@@ -52,3 +53,8 @@ publishing {
     }
 }
 
+sonarqube {
+    properties {
+        property ("sonar.projectKey", "TechTeamer_techteamer_mq_java")
+    }
+}

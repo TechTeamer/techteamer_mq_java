@@ -1,3 +1,4 @@
+import com.facekom.mq_kotlin.*
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Delivery
 import kotlinx.coroutines.delay
@@ -47,14 +48,16 @@ class RPCTest {
 
     @Test
     fun rpcServerTimeoutTest() {
-        queueManager.getRPCServer("rpcServerDelayed", MyRpcServerTimeout::class.java, options = object : RpcServerOptions {
+        queueManager.getRPCServer("rpcServerDelayed", MyRpcServerTimeout::class.java, options = object :
+            RpcServerOptions {
             override val prefetchCount: Int
                 get() = 3
             override val timeOutMs: Int
                 get() = 1000
         }) as MyRpcServerTimeout
 
-        val rpcClientTwo = queueManager.getRPCClient("rpcServerDelayed", MyRPCClient::class.java, options = object : RpcOptions {
+        val rpcClientTwo = queueManager.getRPCClient("rpcServerDelayed", MyRPCClient::class.java, options = object :
+            RpcOptions {
             override val prefetchCount: Int
                 get() = 3
             override val queueMaxSize: Int

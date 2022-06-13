@@ -14,4 +14,4 @@ before_install:
   - chmod +x gradle/wrapper/gradle-wrapper.jar
 
 script:
-  - ./gradlew test
+  - ./gradlew test sonarqube
