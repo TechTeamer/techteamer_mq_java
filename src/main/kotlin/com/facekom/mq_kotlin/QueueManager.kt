@@ -1,5 +1,6 @@
 package com.facekom.mq_kotlin
 
+import kotlinx.coroutines.channels.Channel
 import org.slf4j.Logger
 import kotlin.concurrent.thread
 
@@ -69,7 +70,12 @@ class QueueManager(private val config: QueueConfig) {
         }
 
         val myClass = overrideClass as Class<RPCClient>
-        val rpcClient = myClass.constructors.first().newInstance(
+        val rpcClient = myClass.getConstructor(
+            QueueConnection::class.java,
+            String::class.java,
+            Logger::class.java,
+            RpcOptions::class.java
+        ).newInstance(
             connection,
             rpcName,
             logger,
@@ -96,7 +102,12 @@ class QueueManager(private val config: QueueConfig) {
         ch.queueDeclare(rpcName, true, false, true, null)
 
         val myClass = overrideClass as Class<RPCServer>
-        val rpcServer = myClass.constructors.first().newInstance(ch, rpcName, logger, optionsToSet)
+        val rpcServer = myClass.getConstructor(
+            com.rabbitmq.client.Channel::class.java,
+            String::class.java,
+            Logger::class.java,
+            RpcServerOptions::class.java
+        ).newInstance(ch, rpcName, logger, optionsToSet)
 
         rpcServers[rpcName] = rpcServer
 
@@ -107,18 +118,28 @@ class QueueManager(private val config: QueueConfig) {
         if (publishers.contains(exchangeName)) return publishers[exchangeName]
 
         val myClass = overrideClass as Class<Publisher>
-        val publisher = myClass.constructors.first().newInstance(connection, logger, exchangeName)
+        val publisher = myClass.getConstructor(QueueConnection::class.java, Logger::class.java, String::class.java)
+            .newInstance(connection, logger, exchangeName)
 
         publishers[exchangeName] = publisher
 
         return publisher
     }
 
-    fun getSubscriber(exchangeName: String, overrideClass: Any = Subscriber::class.java, options: ConnectionOptions): Any? {
+    fun getSubscriber(
+        exchangeName: String,
+        overrideClass: Any = Subscriber::class.java,
+        options: ConnectionOptions
+    ): Any? {
         if (subscribers.contains(exchangeName)) return subscribers[exchangeName]
 
         val myClass = overrideClass as Class<Subscriber>
-        val subscriber = myClass.constructors.first().newInstance(connection, logger, exchangeName, options)
+        val subscriber = myClass.getConstructor(
+            QueueConnection::class.java,
+            Logger::class.java,
+            String::class.java,
+            ConnectionOptions::class.java
+        ).newInstance(connection, logger, exchangeName, options)
 
         subscribers[exchangeName] = subscriber
 
@@ -129,7 +150,8 @@ class QueueManager(private val config: QueueConfig) {
         if (queueClients.contains(queueName)) return queueClients[queueName]
 
         val myClass = overrideClass as Class<QueueClient>
-        val queueClient = myClass.constructors.first().newInstance(connection, logger, queueName)
+        val queueClient = myClass.getConstructor(QueueConnection::class.java, Logger::class.java, String::class.java)
+            .newInstance(connection, logger, queueName)
 
         queueClients[queueName] = queueClient
 
@@ -142,7 +164,12 @@ class QueueManager(private val config: QueueConfig) {
         if (queueServers.contains(queueName)) return queueServers[queueName]
 
         val myClass = overrideClass as Class<QueueServer>
-        val queueServer = myClass.constructors.first().newInstance(connection, logger, queueName, options)
+        val queueServer = myClass.getConstructor(
+            QueueConnection::class.java,
+            Logger::class.java,
+            String::class.java,
+            ConnectionOptions::class.java
+        ).newInstance(connection, logger, queueName, options)
 
         queueServers[queueName] = queueServer
 
