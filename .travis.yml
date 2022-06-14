@@ -12,4 +12,4 @@ env:
   - TEST_ENV=travis
 
 script:
-  - ./gradlew test jacocoTestReport sonarqube
+  - ./gradlew test jacocoTestReport sonarqube --info
