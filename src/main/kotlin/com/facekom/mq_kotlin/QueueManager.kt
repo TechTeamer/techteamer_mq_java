@@ -1,6 +1,5 @@
 package com.facekom.mq_kotlin
 
-import kotlinx.coroutines.channels.Channel
 import org.slf4j.Logger
 import kotlin.concurrent.thread
 

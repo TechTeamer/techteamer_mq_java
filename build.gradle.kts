@@ -66,7 +66,6 @@ sonarqube {
         property("sonar.verbose", "true")
         property("sonar.binaries", "build/classes/kotlin")
         property("sonar.dynamicAnalysis", "reuseReports")
-        // property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/jacocoTestReport.xml")
     }
 }
 
