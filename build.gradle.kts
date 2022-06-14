@@ -4,7 +4,8 @@ plugins {
     kotlin("jvm") version "1.6.20"
     `maven-publish`
     application
-    id ("org.sonarqube") version "3.3"
+    id("org.sonarqube") version "3.3"
+    id("jacoco")
 }
 
 group = "com.facekom"
@@ -27,10 +28,12 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
 }
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"
+    tasks["test"].finalizedBy("jacocoTestReport")
 }
 
 application {
@@ -56,5 +59,28 @@ publishing {
 sonarqube {
     properties {
         property("sonar.projectKey", "TechTeamer_techteamer_mq_java")
+        property("sonar.host.url", "https://sonarcloud.io")
+        property("sonar.sources", "src/main/")
+        property("sonar.tests", "src/test/")
+        property("sonar.core.codeCoveragePlugin", "jacoco")
+        property("sonar.verbose", "true")
+        property("sonar.binaries", "build/classes/kotlin")
+        property("sonar.dynamicAnalysis", "reuseReports")
+        // property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/jacocoTestReport.xml")
     }
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test) // tests are required to run before generating the report
+    reports {
+        xml.required.set(true)
+    }
+}
+
+tasks.named("sonarqube") {
+    dependsOn(tasks.named("jacocoTestReport"))
+}
+
+jacoco {
+    toolVersion = "0.8.7"
 }
