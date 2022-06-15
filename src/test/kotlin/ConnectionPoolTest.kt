@@ -37,8 +37,10 @@ class ConnectionPoolTest {
 
         val pool = ConnectionPool(mapOf("other" to "default"))
         pool.setLogger(testhelper.logger)
+        pool.setupQueueManagers(mapOf("mydefaultname" to myWrongConfig))
 
+        pool.connect()
 
-        assertTrue { pool.connections.isEmpty() }
+        assertTrue { pool.connections["mydefaultname"]?.connection?.myChannel == null }
     }
 }

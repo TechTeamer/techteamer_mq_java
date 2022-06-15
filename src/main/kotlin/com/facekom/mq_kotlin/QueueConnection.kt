@@ -14,7 +14,7 @@ class QueueConnection(val config: QueueConfig) {
     private var factory = ConnectionFactory()
 
     private lateinit var connection: Connection
-    open var myChannel: Channel? = null
+    var myChannel: Channel? = null
     var logger = config.logger
 
 
