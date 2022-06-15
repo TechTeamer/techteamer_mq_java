@@ -1,5 +1,6 @@
 package com.facekom.mq_kotlin
 
+import kotlinx.coroutines.runBlocking
 import org.slf4j.Logger
 import kotlin.concurrent.thread
 
@@ -14,7 +15,12 @@ class QueueManager(private val config: QueueConfig) {
     var subscribers = mutableMapOf<String, Any>()
     var queueServers = mutableMapOf<String, Any>()
     var queueClients = mutableMapOf<String, Any>()
-    fun connect() {
+    fun connect() = runBlocking {
+        try {
+            connection.connect()
+        } catch (err: Exception) {
+            logger.error("Failed to connect to queue server $err")
+        }
         try {
             rpcServers.forEach { t ->
                 thread {
@@ -97,16 +103,13 @@ class QueueManager(private val config: QueueConfig) {
             optionsToSet = options
         }
 
-        val ch = connection.getChannel()
-        ch.queueDeclare(rpcName, true, false, true, null)
-
         val myClass = overrideClass as Class<RPCServer>
         val rpcServer = myClass.getConstructor(
-            com.rabbitmq.client.Channel::class.java,
+            QueueConnection::class.java,
             String::class.java,
             Logger::class.java,
             RpcServerOptions::class.java
-        ).newInstance(ch, rpcName, logger, optionsToSet)
+        ).newInstance(connection, rpcName, logger, optionsToSet)
 
         rpcServers[rpcName] = rpcServer
 

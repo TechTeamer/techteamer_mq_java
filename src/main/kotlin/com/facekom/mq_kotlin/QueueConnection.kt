@@ -9,15 +9,22 @@ import javax.net.ssl.KeyManagerFactory
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManagerFactory
 
-class QueueConnection constructor(config: QueueConfig) {
+class QueueConnection(val config: QueueConfig) {
 
     private var factory = ConnectionFactory()
 
-    private var connection: Connection
+    private lateinit var connection: Connection
     open var myChannel: Channel? = null
     var logger = config.logger
 
-    init {
+
+    fun getChannel(): Channel {
+        if (myChannel != null) return myChannel as Channel
+        myChannel = connection.createChannel()
+        return myChannel as Channel
+    }
+
+    fun connect() {
         if (config.options != null) {
             val keyStore = KeyStore.getInstance("PKCS12")
             keyStore.load(FileInputStream(config.options!!.key), config.options!!.keyPwd)
@@ -39,12 +46,7 @@ class QueueConnection constructor(config: QueueConfig) {
 
         factory.setUri(config.url)
         connection = factory.newConnection(config.url)
-    }
-
-    fun getChannel(): Channel {
-        if (myChannel != null) return myChannel as Channel
-        myChannel = connection.createChannel()
-        return myChannel as Channel
+        getChannel()
     }
 
 }

@@ -8,23 +8,28 @@ class RPCActionTest {
 
     private val queueManager = QueueManager(testhelper.testConfig)
 
-    private val rpcServer = queueManager.getRPCServer(rpcName, options = object : RpcServerOptions {
-        override val prefetchCount: Int
-            get() = 3
-        override val timeOutMs: Int
-            get() = 10000
-    }) as RPCServer
+    private var rpcServer: RPCServer
 
-    private val rpcClient = queueManager.getRPCClient(rpcName, options = object : RpcOptions {
-        override val prefetchCount: Int
-            get() = 3
-        override val queueMaxSize: Int
-            get() = 5
-        override val timeOutMs: Int
-            get() = 15000
-    }) as RPCClient
+    private var rpcClient: RPCClient
 
     init {
+         rpcServer = queueManager.getRPCServer(rpcName, options = object : RpcServerOptions {
+            override val prefetchCount: Int
+                get() = 3
+            override val timeOutMs: Int
+                get() = 10000
+        }) as RPCServer
+
+        queueManager.connect()
+
+         rpcClient = queueManager.getRPCClient(rpcName, options = object : RpcOptions {
+            override val prefetchCount: Int
+                get() = 3
+            override val queueMaxSize: Int
+                get() = 5
+            override val timeOutMs: Int
+                get() = 15000
+        }) as RPCClient
         queueManager.connect()
     }
 

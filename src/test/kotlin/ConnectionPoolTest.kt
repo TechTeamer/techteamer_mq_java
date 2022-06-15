@@ -2,7 +2,6 @@ import com.facekom.mq_kotlin.ConnectionPool
 import com.facekom.mq_kotlin.QueueConfig
 import com.facekom.mq_kotlin.QueueManager
 import org.junit.Test
-import kotlin.test.assertFails
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
@@ -40,9 +39,6 @@ class ConnectionPoolTest {
         pool.setLogger(testhelper.logger)
 
 
-        assertFails {
-            pool.setupQueueManagers(mapOf("defaultt" to myWrongConfig))
-            pool.connect()
-        }
+        assertTrue { pool.connections.isEmpty() }
     }
 }

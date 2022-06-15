@@ -24,11 +24,8 @@ open class RPCClient constructor(
 
     fun initialize() {
         val channel = connection.getChannel()
-        channel.exchangeDeclare(rpcName, "direct", true)
         channel.queueDeclare("$rpcName-reply", true, false, false, null)
-        channel.queueDeclare(rpcName, true, false, true, null)
         channel.queueBind(rpcName, rpcName, keyName)
-        channel.basicQos(options.prefetchCount)
 
         val rpcOptions = RpcClientParams()
         rpcOptions.channel(channel)
@@ -94,7 +91,3 @@ open class RPCClient constructor(
     }
 
 }
-
-
-
-

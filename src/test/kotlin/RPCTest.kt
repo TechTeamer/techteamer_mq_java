@@ -1,10 +1,12 @@
 import com.facekom.mq_kotlin.*
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Delivery
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.slf4j.Logger
+import java.lang.Thread.sleep
 import kotlin.test.assertTrue
 
 var rpcServerTestResult: QueueMessage? = null
@@ -15,29 +17,31 @@ class RPCTest {
 
     private val queueManager = QueueManager(testhelper.testConfig)
 
-    val rpcServer = queueManager.getRPCServer(rpcName, MyRpcServer::class.java, options = object : RpcServerOptions {
-        override val prefetchCount: Int
-            get() = 3
-        override val timeOutMs: Int
-            get() = 10000
-    }) as MyRpcServer
-
-    val rpcClient = queueManager.getRPCClient(rpcName, MyRPCClient::class.java, options = object : RpcOptions {
-        override val prefetchCount: Int
-            get() = 3
-        override val queueMaxSize: Int
-            get() = 5
-        override val timeOutMs: Int
-            get() = 15000
-    }) as MyRPCClient
+    private var rpcClient: MyRPCClient? = null
 
     init {
+        queueManager.getRPCServer(rpcName, MyRpcServer::class.java, options = object : RpcServerOptions {
+            override val prefetchCount: Int
+                get() = 3
+            override val timeOutMs: Int
+                get() = 10000
+        }) as MyRpcServer
+        queueManager.connect()
+
+        rpcClient = queueManager.getRPCClient(rpcName, MyRPCClient::class.java, options = object : RpcOptions {
+            override val prefetchCount: Int
+                get() = 3
+            override val queueMaxSize: Int
+                get() = 5
+            override val timeOutMs: Int
+                get() = 15000
+        }) as MyRPCClient
         queueManager.connect()
     }
 
     @Test
     fun sendAndReceiveRpc() = runBlocking {
-        val result = rpcClient.sendTest()
+        val result = rpcClient?.sendTest()
         assertTrue {
             return@assertTrue result?.data?.get("test") == "test" &&
                     result.attachments.contains("testAtt") &&
@@ -47,7 +51,7 @@ class RPCTest {
     }
 
     @Test
-    fun rpcServerTimeoutTest() {
+    fun rpcServerTimeoutTest() = runBlocking {
         queueManager.getRPCServer("rpcServerDelayed", MyRpcServerTimeout::class.java, options = object :
             RpcServerOptions {
             override val prefetchCount: Int
@@ -55,6 +59,7 @@ class RPCTest {
             override val timeOutMs: Int
                 get() = 1000
         }) as MyRpcServerTimeout
+        queueManager.connect()
 
         val rpcClientTwo = queueManager.getRPCClient("rpcServerDelayed", MyRPCClient::class.java, options = object :
             RpcOptions {
@@ -67,9 +72,9 @@ class RPCTest {
         }) as MyRPCClient
         queueManager.connect()
 
-        assertTrue {
-            val res = rpcClientTwo.sendTest()
+        val res = rpcClientTwo.sendTest()
 
+        assertTrue {
             return@assertTrue (res?.status == "error") &&
                     (res.data?.get("error") == "timeout")
         }
@@ -85,19 +90,18 @@ class RPCTest {
         fun sendTest(): QueueMessage? {
             return call(
                 mutableMapOf("testData" to "test"),
-                7000,
+                15000,
                 mutableMapOf("testAttachment" to "hello".toByteArray())
             )
         }
     }
 
     class MyRpcServer(
-        ch: Channel,
+        connection: QueueConnection,
         name: String,
         logger: Logger,
         override val options: RpcServerOptions
-    ) :
-        RPCServer(ch, name, logger, options) {
+    ) : RPCServer(connection, name, logger, options) {
 
         override suspend fun callback(
             data: QueueMessage,
@@ -113,18 +117,18 @@ class RPCTest {
     }
 
     class MyRpcServerTimeout(
-        ch: Channel,
+        connection: QueueConnection,
         name: String,
         logger: Logger,
         override val options: RpcServerOptions
     ) :
-        RPCServer(ch, name, logger, options) {
+        RPCServer(connection, name, logger, options) {
 
         override suspend fun callback(
             data: QueueMessage,
             delivery: Delivery,
             response: QueueResponse,
-        ): MutableMap<String, Any?> = run {
+        ): MutableMap<String, Any?> {
             delay(5000)
             response.addAttachment("testAtt", "test".toByteArray())
             response.addAttachment("testAtt2222", "test20".toByteArray())
