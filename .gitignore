@@ -1,5 +1,6 @@
 # Compiled class file
 *.class
+src/test/kotlin/TestHelper.kt
 
 # Log file
 *.log

@@ -8,11 +8,11 @@ class TestHelper {
         override var url: String = "amqps://guest:guest@localhost:5671"
         override val options: RabbitMqOptions? = object : RabbitMqOptions {
             override val key: String
-                get() = "/workspace/vuer_docker/workspace/cert/vuer_mq_cert/client/keycert.p12"
+                get() = "/client/client_certificate.p12"
             override val trust: String
-                get() = "/workspace/vuer_docker/workspace/cert/vuer_mq_cert/rabbitstore"
+                get() = "/rabbitstore/mystore"
             override val trustPwd: CharArray
-                get() = "asdf1234".toCharArray()
+                get() = "123456".toCharArray()
             override val keyPwd: CharArray
                 get() = "MySecretPassword".toCharArray()
         }
