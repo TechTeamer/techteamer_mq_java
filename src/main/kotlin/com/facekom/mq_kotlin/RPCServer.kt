@@ -4,24 +4,18 @@ import com.rabbitmq.client.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.slf4j.Logger
+import kotlin.reflect.KSuspendFunction3
 
-open class RPCServer(
-    ch: Channel,
-    name: String,
+open class RPCServerOverride(
+    val connection: QueueConnection,
+    val name: String,
     val logger: Logger,
     open val options: RpcServerOptions = object : RpcServerOptions {
         override val timeOutMs: Int = 10000
         override val prefetchCount: Int = 1
-    }
-) : RpcServer(ch, name) {
-
-    open val actions = mutableMapOf<String, (
-        Any,
-        data: MutableMap<String, Any?>,
-        delivery: Delivery,
-        response: QueueResponse,
-        request: QueueMessage
-    ) -> MutableMap<String, Any?>?>()
+    },
+    val callback: KSuspendFunction3<QueueMessage, Delivery, QueueResponse, MutableMap<String, Any?>?>
+) : RpcServer(connection.getChannel(), name) {
 
     override fun handleCall(delivery: Delivery, replyProperties: AMQP.BasicProperties?): ByteArray {
         val message: QueueMessage = unserialize(delivery.body)
@@ -35,8 +29,6 @@ open class RPCServer(
         if (message.timeOut != null) {
             timeOut = message.timeOut!!
         }
-
-
         runBlocking {
             try {
                 withTimeout(timeOut.toLong()) {
@@ -62,6 +54,7 @@ open class RPCServer(
                 replyAttachments.forEach { t ->
                     reply.addAttachment(t.key, t.value)
                 }
+
                 reply.serialize()
             } else {
                 QueueMessage("ok", mutableMapOf("message" to "no reply generated")).serialize()
@@ -73,19 +66,46 @@ open class RPCServer(
 
     }
 
-    open suspend fun callback(
-        data: QueueMessage,
+}
+
+open class RPCServer(
+    val connection: QueueConnection,
+    val name: String,
+    val logger: Logger,
+    open val options: RpcServerOptions = object : RpcServerOptions {
+        override val timeOutMs: Int = 10000
+        override val prefetchCount: Int = 1
+    }
+) {
+    open val actions = mutableMapOf<String, (
+        Any,
+        data: MutableMap<String, Any?>,
         delivery: Delivery,
         response: QueueResponse,
-    ): MutableMap<String, Any?>? = run {
-        if ((data.data?.get("action") != null) && (actions[data.data["action"]] != null)) {
-            return actions[data.data["action"]]!!.invoke(this, data.data, delivery, response, data)
-        }
-        return mutableMapOf("data" to null)
+        request: QueueMessage
+    ) -> MutableMap<String, Any?>?>()
+
+    fun initialize() {
+        val channel = connection.getChannel()
+        channel.exchangeDeclare(name, "direct", true)
+        channel.queueDeclare(name, true, false, false, null)
+        channel.queueBind(name, name, "$name-key")
+        channel.basicQos(options.prefetchCount)
+
+        val server = RPCServerOverride(
+            connection,
+            name,
+            logger,
+            options,
+            ::callback
+        )
+
+        server.mainloop()
     }
 
     open fun registerAction(
-        action: String, handler: (
+        action: String,
+        handler: (
             Any,
             data: MutableMap<String, Any?>,
             delivery: Delivery,
@@ -100,8 +120,14 @@ open class RPCServer(
         }
     }
 
-
-    fun initialize() {
-        mainloop()
+    open suspend fun callback(
+        data: QueueMessage,
+        delivery: Delivery,
+        response: QueueResponse,
+    ): MutableMap<String, Any?>? = run {
+        if ((data.data?.get("action") != null) && (actions[data.data["action"]] != null)) {
+            return actions[data.data["action"]]!!.invoke(this, data.data, delivery, response, data)
+        }
+        return mutableMapOf("data" to null)
     }
 }
