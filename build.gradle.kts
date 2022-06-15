@@ -13,7 +13,6 @@ group = "com.facekom"
 version = "1.0"
 
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 
@@ -51,14 +50,15 @@ val javadocJar = tasks.register("javadocJar", Jar::class.java) {
 
 val sonatypeUsername: String? = System.getenv("SONATYPE_USERNAME")
 val sonatypePassword: String? = System.getenv("SONATYPE_PASSWORD")
-val repositoryId: String? = System.getenv("SONATYPE_REPOSITORY_ID")
+val sonatypeRepositoryId: String? = System.getenv("SONATYPE_REPOSITORY_ID")
+val artifactName: String = "mq"
 
 publishing {
     publications {
         repositories {
             maven {
-                name="techteamer_mq_java"
-                val releasesRepoUrl = uri("https://s01.oss.sonatype.org/service/local/staging/deployByRepositoryId/$repositoryId/")
+                name=artifactName
+                val releasesRepoUrl = uri("https://s01.oss.sonatype.org/service/local/staging/deployByRepositoryId/$sonatypeRepositoryId/")
                 val snapshotsRepoUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
                 url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
                 credentials {
@@ -70,12 +70,12 @@ publishing {
         create<MavenPublication>("maven") {
             artifact(javadocJar)
             groupId = "com.facekom"
-            artifactId = "mq_kotlin"
-            version = "1.0"
+            artifactId = artifactName
+            version = "1.0.0"
 
             from(components["java"])
             pom {
-                name.set("mq_kotlin")
+                name.set(artifactName)
                 description.set("A RabbitMQ wrapper for java written in Kotlin")
                 licenses {
                     license {
@@ -95,11 +95,11 @@ publishing {
                 developers {
                     developer {
                         name.set("Zoltan Nagy")
-                        email.set("tunderdomb@techteamer.com")
+                        email.set("tunderdomb@facekom.com")
                     }
                     developer {
                         name.set("Ferenc Gulyas")
-                        email.set("ferenc.gulyas@techteamer.com")
+                        email.set("ferenc.gulyas@facekom.com")
                     }
                 }
             }
@@ -110,6 +110,7 @@ publishing {
 signing {
     useInMemoryPgpKeys(
         System.getenv("GPG_PRIVATE_KEY"),
+        System.getenv("GPG_PRIVATE_KEY_ID"),
         System.getenv("GPG_PRIVATE_PASSWORD")
     )
     sign(publishing.publications)
