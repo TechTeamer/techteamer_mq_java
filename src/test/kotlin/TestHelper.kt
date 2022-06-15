@@ -19,7 +19,7 @@ class TestHelper {
     }
 
     init {
-        if (System.getenv("TEST_ENV") != "travis" ) {
+        if (System.getenv("TEST_ENV") == "travis" ) {
             testConfig = object : QueueConfig {
                 override var url = "amqp://guest:guest@localhost:5672"
                 override val options = null
