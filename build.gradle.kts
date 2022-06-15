@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.6.20"
     `maven-publish`
+    signing
     application
     id("org.sonarqube") version "3.3"
     id("jacoco")
@@ -43,16 +44,75 @@ buildscript {
 
 }
 
+// Empty javadoc
+val javadocJar = tasks.register("javadocJar", Jar::class.java) {
+    archiveClassifier.set("javadoc")
+}
+
+val sonatypeUsername: String? = System.getenv("SONATYPE_USERNAME")
+val sonatypePassword: String? = System.getenv("SONATYPE_PASSWORD")
+val repositoryId: String? = System.getenv("SONATYPE_REPOSITORY_ID")
+
 publishing {
     publications {
+        repositories {
+            maven {
+                name="techteamer_mq_java"
+                val releasesRepoUrl = uri("https://s01.oss.sonatype.org/service/local/staging/deployByRepositoryId/$repositoryId/")
+                val snapshotsRepoUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+                url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
+                credentials {
+                    username = sonatypeUsername
+                    password = sonatypePassword
+                }
+            }
+        }
         create<MavenPublication>("maven") {
+            artifact(javadocJar)
             groupId = "com.facekom"
             artifactId = "mq_kotlin"
             version = "1.0"
 
             from(components["java"])
+            pom {
+                name.set("mq_kotlin")
+                description.set("A RabbitMQ wrapper for java written in Kotlin")
+                licenses {
+                    license {
+                        name.set("MIT")
+                        url.set("https://opensource.org/licenses/MIT")
+                    }
+                }
+                url.set("https://github.com/TechTeamer/techteamer_mq_java")
+                issueManagement {
+                    system.set("Github")
+                    url.set("https://github.com/TechTeamer/techteamer_mq_java/issues")
+                }
+                scm {
+                    connection.set("https://github.com/TechTeamer/techteamer_mq_java.git")
+                    url.set("https://github.com/TechTeamer/techteamer_mq_java")
+                }
+                developers {
+                    developer {
+                        name.set("Zoltan Nagy")
+                        email.set("tunderdomb@techteamer.com")
+                    }
+                    developer {
+                        name.set("Ferenc Gulyas")
+                        email.set("ferenc.gulyas@techteamer.com")
+                    }
+                }
+            }
         }
     }
+}
+
+signing {
+    useInMemoryPgpKeys(
+        System.getenv("GPG_PRIVATE_KEY"),
+        System.getenv("GPG_PRIVATE_PASSWORD")
+    )
+    sign(publishing.publications)
 }
 
 sonarqube {
