@@ -23,14 +23,14 @@ open class RPCClient constructor(
 
     fun initialize() {
         val channel = connection.getChannel()
-        channel.queueDeclare("$rpcName-reply", true, false, false, null)
+
+        val queue = channel.queueDeclare("", true, false, true, null).queue
 
         val rpcOptions = RpcClientParams()
         rpcOptions.channel(channel)
         rpcOptions.exchange(rpcName)
         rpcOptions.routingKey("$rpcName-key")
-        rpcOptions.replyTo("$rpcName-reply")
-
+        rpcOptions.replyTo(queue)
         client = RpcClient(rpcOptions)
     }
 

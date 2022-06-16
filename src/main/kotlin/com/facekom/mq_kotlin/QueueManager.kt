@@ -1,8 +1,10 @@
 package com.facekom.mq_kotlin
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.slf4j.Logger
-import kotlin.concurrent.thread
 
 
 class QueueManager(private val config: QueueConfig) {
@@ -23,7 +25,7 @@ class QueueManager(private val config: QueueConfig) {
         }
         try {
             rpcServers.forEach { t ->
-                thread {
+                CoroutineScope(Dispatchers.IO).launch {
                     val tClass = t.value as RPCServer
                     tClass.initialize()
                 }
@@ -37,13 +39,13 @@ class QueueManager(private val config: QueueConfig) {
                 tClass.initialize()
             }
             subscribers.forEach { t ->
-                thread {
+                CoroutineScope(Dispatchers.IO).launch {
                     val tClass = t.value as Subscriber
                     tClass.initialize()
                 }
             }
             queueServers.forEach { t ->
-                thread {
+                CoroutineScope(Dispatchers.IO).launch {
                     val tClass = t.value as QueueServer
                     tClass.initialize()
                 }

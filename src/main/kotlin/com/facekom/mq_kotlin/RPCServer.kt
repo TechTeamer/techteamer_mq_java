@@ -1,8 +1,7 @@
 package com.facekom.mq_kotlin
 
 import com.rabbitmq.client.*
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.*
 import org.slf4j.Logger
 import kotlin.reflect.KSuspendFunction3
 
@@ -16,6 +15,12 @@ open class RPCServerOverride(
     },
     val callback: KSuspendFunction3<QueueMessage, Delivery, QueueResponse, MutableMap<String, Any?>?>
 ) : RpcServer(connection.getChannel(), name) {
+
+    override fun processRequest(request: Delivery) {
+        CoroutineScope(Dispatchers.IO).launch {
+            super.processRequest(request)
+        }
+    }
 
     override fun handleCall(delivery: Delivery, replyProperties: AMQP.BasicProperties?): ByteArray {
         val message: QueueMessage = unserialize(delivery.body)
@@ -65,7 +70,6 @@ open class RPCServerOverride(
         }
 
     }
-
 }
 
 open class RPCServer(
