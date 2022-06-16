@@ -18,19 +18,17 @@ open class RPCClient constructor(
 ) {
 
     private lateinit var client: RpcClient
-    private var keyName = "$rpcName-key"
     private val correlationIdList = mutableListOf<String>()
 
 
     fun initialize() {
         val channel = connection.getChannel()
         channel.queueDeclare("$rpcName-reply", true, false, false, null)
-        channel.queueBind(rpcName, rpcName, keyName)
 
         val rpcOptions = RpcClientParams()
         rpcOptions.channel(channel)
         rpcOptions.exchange(rpcName)
-        rpcOptions.routingKey(keyName)
+        rpcOptions.routingKey("$rpcName-key")
         rpcOptions.replyTo("$rpcName-reply")
 
         client = RpcClient(rpcOptions)

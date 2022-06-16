@@ -64,6 +64,7 @@ class PubSubTest {
         publisher.sendIt("testNewMessage")
         delay(200)
 
+
         assertTrue {
             val testData = sendStringResult?.data?.get("data") as Map<*, *>?
             val testDataTwo = sendStringResultTwo?.data?.get("data") as Map<*, *>?
