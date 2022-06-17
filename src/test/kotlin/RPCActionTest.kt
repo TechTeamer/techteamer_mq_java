@@ -2,6 +2,8 @@ import com.facekom.mq_kotlin.*
 import kotlinx.coroutines.*
 import org.junit.Test
 import kotlin.concurrent.thread
+import kotlin.test.assertFails
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class RPCActionTest {
@@ -28,7 +30,7 @@ class RPCActionTest {
             override val prefetchCount: Int
                 get() = 3
             override val queueMaxSize: Int
-                get() = 5
+                get() = 1
             override val timeOutMs: Int
                 get() = 15000
         }) as RPCClient
@@ -63,7 +65,6 @@ class RPCActionTest {
 
     @Test
     fun rpcServerNonBlockingTest() = runBlocking {
-
         assertTrue {
             var answer1: QueueMessage? = null
             var answer2: QueueMessage? = null
@@ -135,6 +136,63 @@ class RPCActionTest {
             val statement3 = answer1 != null && answer2 != null
 
             return@assertTrue statement1 && statement2 && statement3
+        }
+    }
+
+    @Test
+    fun testFullQueue() {
+        queueManager.setLogger(testhelper.logger)
+
+        rpcServer.registerAction("testAction") { _, _, _, response, message ->
+            return@registerAction mutableMapOf<String, Any?>("testAnswer" to "answer")
+        }
+        assertTrue {
+            var answer1: QueueMessage? = null
+            var answer2: QueueMessage? = null
+            var answer3: QueueMessage? = null
+            var answer4: QueueMessage? = null
+
+            CoroutineScope(Dispatchers.IO).launch {
+                answer1 = rpcClient.callAction(
+                    "testAction",
+                    mutableMapOf("testData" to "data"),
+                    null,
+                    mutableMapOf("testAttachment" to "helloTest".toByteArray())
+                )
+            }
+
+            CoroutineScope(Dispatchers.IO).launch {
+                answer2 = rpcClient.callAction(
+                    "testAction",
+                    mutableMapOf("testData" to "data"),
+                    null,
+                    mutableMapOf("testAttachment" to "helloTest".toByteArray())
+                )
+            }
+
+            CoroutineScope(Dispatchers.IO).launch {
+                answer3 = rpcClient.callAction(
+                    "testAction",
+                    mutableMapOf("testData" to "data"),
+                    null,
+                    mutableMapOf("testAttachment" to "helloTest".toByteArray())
+                )
+            }
+
+            CoroutineScope(Dispatchers.IO).launch {
+                answer4 = rpcClient.callAction(
+                    "testAction",
+                    mutableMapOf("testData" to "data"),
+                    null,
+                    mutableMapOf("testAttachment" to "helloTest".toByteArray())
+                )
+            }
+            runBlocking {
+                delay(3000)
+            }
+
+            // at least one answer should be null, as the queue has to be full because queueMaxSize was set to 1
+            return@assertTrue !(answer1 != null && answer2 != null && answer3 != null && answer4 != null)
         }
     }
 }
