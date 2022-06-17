@@ -66,7 +66,7 @@ class RPCActionTest {
     @Test
     fun rpcServerNonBlockingTest() = runBlocking {
         assertTrue {
-            var answer1: QueueMessage? = null
+            var answer1: QueueMessage?
             var answer2: QueueMessage? = null
 
             var call2Started = false
@@ -78,12 +78,12 @@ class RPCActionTest {
                     get() = 10000
             }) as RPCServer
 
-            server.registerAction("testAction") { _, _, _, response, message ->
+            server.registerAction("testAction") { _, _, _, response, _ ->
                 response.addAttachment("testAttachmentAnswer", "helloAnswer".toByteArray())
                 return@registerAction mutableMapOf<String, Any?>("testAnswer" to "answer")
             }
 
-            server.registerAction("testAction2") { _, _, _, response, message ->
+            server.registerAction("testAction2") { _, _, _, response, _ ->
                 Thread.sleep(1000)
                 response.addAttachment("testAttachmentAnswer", "helloAnswer".toByteArray())
                 return@registerAction mutableMapOf<String, Any?>("testAnswer2" to "answer2")
@@ -143,7 +143,7 @@ class RPCActionTest {
     fun testFullQueue() {
         queueManager.setLogger(testhelper.logger)
 
-        rpcServer.registerAction("testAction") { _, _, _, response, message ->
+        rpcServer.registerAction("testAction") { _, _, _, _, _ ->
             return@registerAction mutableMapOf<String, Any?>("testAnswer" to "answer")
         }
         assertTrue {

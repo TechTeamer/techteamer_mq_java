@@ -39,7 +39,7 @@ class QueueTest {
     fun testQueueMessageTimeOutAndMaxRetry() = runBlocking {
         val name = "timeOutTest"
 
-        val server = serverManager.getQueueServer(
+        serverManager.getQueueServer(
             name,
             MyTestQueueServerTimeOut::class.java,
             options = object : ConnectionOptions {
