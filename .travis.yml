@@ -11,5 +11,8 @@ addons:
 env:
   - TEST_ENV=travis
 
+git:
+  depth: false
+
 script:
   - ./gradlew test jacocoTestReport sonarqube
