@@ -54,8 +54,6 @@ class QueueTest {
         serverManager.connect()
         clientManager.connect()
 
-        println(serverManager.queueServers)
-
         client.sendAction(
             "action",
             mutableMapOf("testData" to "test"),
@@ -64,7 +62,7 @@ class QueueTest {
 
         assertTrue {
             delay(1300)
-            // because of timeouts and retries we will try to make send the message 4 times (it means that we REtried it 3 times)
+            // because of timeouts and retries we will try to send the message 4 times (it means that we REtried it 3 times)
             return@assertTrue errorCounter == 3
         }
     }
