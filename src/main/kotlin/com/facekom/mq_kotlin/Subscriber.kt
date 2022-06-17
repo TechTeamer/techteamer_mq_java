@@ -65,9 +65,8 @@ open class Subscriber(
                 if (options.maxRetry != null && delivery.envelope.isRedeliver && counter > options.maxRetry!!) {
                     logger.error("SUBSCRIBER TRIED TOO MANY TIMES $name, $request, ${delivery.body}")
                     ack(channel, delivery)
-                    if (retryMap[consumerTag] != null) {
-                        retryMap.remove(consumerTag)
-                    }
+
+                    retryMap.remove(consumerTag)
                     return@launch
                 }
             }
