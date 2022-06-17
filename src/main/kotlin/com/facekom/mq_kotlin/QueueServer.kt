@@ -18,7 +18,7 @@ open class QueueServer(
             if (prefetchCount != null) {
                 channel.basicQos(prefetchCount)
             }
-            channel.basicConsume(name, true, deliverCallback) { _: String? -> } // consumerTag parameter
+            channel.basicConsume(name, false, deliverCallback) { _: String? -> } // consumerTag parameter
         } catch (error: Exception) {
             logger.error("CANNOT INITIALIZE QUEUE SERVER $error")
         }

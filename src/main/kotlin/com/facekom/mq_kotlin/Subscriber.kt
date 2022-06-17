@@ -32,7 +32,7 @@ open class Subscriber(
             channel.exchangeDeclare(name, "fanout", true)
             val queueName = channel.queueDeclare("", true, true, false, null)?.queue;
             channel.queueBind(queueName, name, "")
-            channel.basicConsume(queueName, true, deliverCallback) { _: String? -> } // consumerTag parameter
+            channel.basicConsume(queueName, false, deliverCallback) { _: String? -> } // consumerTag parameter
         } catch (error: Exception) {
             logger.error("CANNOT INITIALIZE SUBSCRIBER $error")
         }
@@ -50,12 +50,14 @@ open class Subscriber(
 
             if (request.status != "ok") {
                 ack(channel, delivery)
+                return@launch
             }
 
             if (consumerTag != null) {
                 var counter = 1
                 if (retryMap[consumerTag] != null) {
                     counter += retryMap[consumerTag]!!
+                    retryMap[consumerTag] = counter
                 } else {
                     retryMap[consumerTag] = counter
                 }
@@ -66,6 +68,7 @@ open class Subscriber(
                     if (retryMap[consumerTag] != null) {
                         retryMap.remove(consumerTag)
                     }
+                    return@launch
                 }
             }
 
@@ -79,14 +82,15 @@ open class Subscriber(
                 withTimeout(timeOut.toLong()) {
                     request.data?.let { it -> callback(it, delivery.properties, request, delivery) }
                 }
-            } catch (e: Exception) {
-                logger.error("TIMEOUT ${e.message}")
-            } finally {
+                ack(channel, delivery)
                 retryMap.remove(consumerTag)
+            } catch (e: Exception) {
+                logger.error("TIMEOUT BY SERVER SIDE $e")
+                nack(channel, delivery)
             }
         }
 
-    open fun callback(
+    open suspend fun callback(
         data: MutableMap<String, Any?>,
         props: BasicProperties,
         request: QueueMessage,
@@ -119,7 +123,7 @@ open class Subscriber(
     }
 
     open fun nack(channel: Channel, delivery: Delivery) {
-        channel.basicNack(delivery.envelope.deliveryTag, false, false)
+        channel.basicNack(delivery.envelope.deliveryTag, false, true)
     }
 
 }

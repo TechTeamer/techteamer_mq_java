@@ -93,13 +93,25 @@ class PubSubTest {
         }
     }
 
+    class MyTestPublisherNotOk(
+        override val queueConnection: QueueConnection, override val logger: Logger, override val exchange: String
+    ) : Publisher(queueConnection, logger, exchange) {
+        fun sendIt(msg: String) {
+            sendAction(
+                "send", mutableMapOf("testData" to msg), attachments = mutableMapOf(
+                    "publisherTestAttachment" to "hello".toByteArray(), "otherTest" to "testHello".toByteArray()
+                )
+            )
+        }
+    }
+
     class MyTestSubscriber(
         override var connection: QueueConnection,
         override var logger: Logger,
         override val name: String,
         override val options: ConnectionOptions
     ) : Subscriber(connection, logger, name, options) {
-        override fun callback(
+        override suspend fun callback(
             data: MutableMap<String, Any?>, props: BasicProperties, request: QueueMessage, delivery: Delivery
         ): Any? {
             sendStringResult = request
@@ -114,7 +126,7 @@ class PubSubTest {
         override val name: String,
         override val options: ConnectionOptions
     ) : Subscriber(connection, logger, name, options) {
-        override fun callback(
+        override suspend fun callback(
             data: MutableMap<String, Any?>, props: BasicProperties, request: QueueMessage, delivery: Delivery
         ): Any? {
             sendStringResultTwo = request
@@ -122,6 +134,5 @@ class PubSubTest {
             return null
         }
     }
-
 }
 

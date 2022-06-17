@@ -14,7 +14,6 @@ class QueueTest {
     val serverManager = QueueManager(testhelper.testConfig)
 
 
-
     val queueServer =
         serverManager.getQueueServer(queueName, MyTestQueueServer::class.java) as MyTestQueueServer
 
@@ -36,7 +35,39 @@ class QueueTest {
         delay(200)
     }
 
+    @Test
+    fun testQueueMessageTimeOutAndMaxRetry() = runBlocking {
+        val name = "timeOutTest"
 
+        val server = serverManager.getQueueServer(
+            name,
+            MyTestQueueServerTimeOut::class.java,
+            options = object : ConnectionOptions {
+                override val timeOutMs: Int
+                    get() = 200
+                override val maxRetry: Int?
+                    get() = 3
+            }) as MyTestQueueServerTimeOut
+
+        val client = clientManager.getQueueClient(name) as QueueClient
+
+        serverManager.connect()
+        clientManager.connect()
+
+        println(serverManager.queueServers)
+
+        client.sendAction(
+            "action",
+            mutableMapOf("testData" to "test"),
+            attachments = mutableMapOf("testAttachment" to "helloTest".toByteArray())
+        )
+
+        assertTrue {
+            delay(1300)
+            // because of timeouts and retries we will try to make send the message 4 times (it means that we REtried it 3 times)
+            return@assertTrue errorCounter == 3
+        }
+    }
 }
 
 class MyTestQueueServer(
@@ -45,7 +76,7 @@ class MyTestQueueServer(
     override val name: String,
     override val options: ConnectionOptions
 ) : QueueServer(queueConnection, logger, name, options) {
-    override fun callback(
+    override suspend fun callback(
         data: MutableMap<String, Any?>,
         props: BasicProperties,
         request: QueueMessage,
@@ -55,7 +86,29 @@ class MyTestQueueServer(
             return@assertTrue data["action"] == "action" &&
                     request.attachments["testAttachment"]?.let { String(it) } == "helloTest"
         }
+        return null
+    }
+}
+
+class MyTestQueueServerTimeOut(
+    override val queueConnection: QueueConnection,
+    override var logger: Logger,
+    override val name: String,
+    override val options: ConnectionOptions
+) : QueueServer(queueConnection, logger, name, options) {
+
+    override suspend fun callback(
+        data: MutableMap<String, Any?>,
+        props: BasicProperties,
+        request: QueueMessage,
+        delivery: Delivery
+    ): Any? {
+        errorCounter++
+        delay(1000)
 
         return null
     }
 }
+
+var errorCounter = 0
+
