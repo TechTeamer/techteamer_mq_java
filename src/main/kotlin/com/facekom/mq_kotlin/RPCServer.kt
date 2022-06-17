@@ -3,7 +3,6 @@ package com.facekom.mq_kotlin
 import com.rabbitmq.client.*
 import kotlinx.coroutines.*
 import org.slf4j.Logger
-import kotlin.reflect.KSuspendFunction3
 
 open class RPCServerOverride(
     val connection: QueueConnection,
@@ -13,7 +12,7 @@ open class RPCServerOverride(
         override val timeOutMs: Int = 10000
         override val prefetchCount: Int = 1
     },
-    val callback: KSuspendFunction3<QueueMessage, Delivery, QueueResponse, MutableMap<String, Any?>?>
+    private val rpcServer: RPCServer
 ) : RpcServer(connection.getChannel(), name) {
 
     override fun processRequest(request: Delivery) {
@@ -37,7 +36,7 @@ open class RPCServerOverride(
         runBlocking {
             try {
                 withTimeout(timeOut.toLong()) {
-                    answer = callback(message, delivery, response)
+                    answer = rpcServer.callback(message, delivery, response)
                 }
             } catch (e: Exception) {
                 logger.error("TIMEOUT ${e.message}")
@@ -101,7 +100,7 @@ open class RPCServer(
             name,
             logger,
             options,
-            ::callback
+            this
         )
 
         server.mainloop()
@@ -134,4 +133,5 @@ open class RPCServer(
         }
         return mutableMapOf("data" to null)
     }
+
 }
