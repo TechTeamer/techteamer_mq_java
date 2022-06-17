@@ -31,11 +31,16 @@ open class Subscriber(
     }
 
     open fun initialize() {
-        val channel = connection.getChannel()
-        channel.exchangeDeclare(name, "fanout", true)
-        val queueName = channel.queueDeclare("", true, true, false, null)?.queue;
-        channel.queueBind(queueName, name, "")
-        channel.basicConsume(queueName, true, deliverCallback) { _: String? -> } // consumerTag parameter
+        try {
+            val channel = connection.getChannel()
+            channel.exchangeDeclare(name, "fanout", true)
+            val queueName = channel.queueDeclare("", true, true, false, null)?.queue;
+            channel.queueBind(queueName, name, "")
+            channel.basicConsume(queueName, true, deliverCallback) { _: String? -> } // consumerTag parameter
+        } catch (error: Exception) {
+            logger.error("CANNOT INITIALIZE SUBSCRIBER $error")
+        }
+
     }
 
     open val deliverCallback = DeliverCallback { consumerTag: String?, delivery: Delivery ->
@@ -73,7 +78,6 @@ open class Subscriber(
             if (request.timeOut != null) {
                 timeOut = request.timeOut!!
             }
-
 
             try {
                 withTimeout(timeOut.toLong()) {

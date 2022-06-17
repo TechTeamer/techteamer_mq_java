@@ -38,24 +38,26 @@ class QueueTest {
         delay(200)
     }
 
-    class MyTestQueueServer(
-        override val queueConnection: QueueConnection,
-        override var logger: Logger,
-        override val name: String,
-        override val options: ConnectionOptions
-    ) : QueueServer(queueConnection, logger, name, options) {
-        override fun callback(
-            data: MutableMap<String, Any?>,
-            props: BasicProperties,
-            request: QueueMessage,
-            delivery: Delivery
-        ): Any? {
-            assertTrue {
-                return@assertTrue data["action"] == "action" &&
-                        request.attachments["testAttachment"]?.let { String(it) } == "helloTest"
-            }
 
-            return null
+}
+
+class MyTestQueueServer(
+    override val queueConnection: QueueConnection,
+    override var logger: Logger,
+    override val name: String,
+    override val options: ConnectionOptions
+) : QueueServer(queueConnection, logger, name, options) {
+    override fun callback(
+        data: MutableMap<String, Any?>,
+        props: BasicProperties,
+        request: QueueMessage,
+        delivery: Delivery
+    ): Any? {
+        assertTrue {
+            return@assertTrue data["action"] == "action" &&
+                    request.attachments["testAttachment"]?.let { String(it) } == "helloTest"
         }
+
+        return null
     }
 }

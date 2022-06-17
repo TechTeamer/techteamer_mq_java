@@ -15,13 +15,16 @@ open class QueueServer(
 
 
     override fun initialize() {
-        val channel = queueConnection.getChannel()
-        val prefetchCount = options.prefetchCount
-        channel.queueDeclare(name, true, false, false, null)
-        if (prefetchCount != null) {
-            channel.basicQos(prefetchCount)
+        try {
+            val channel = queueConnection.getChannel()
+            val prefetchCount = options.prefetchCount
+            channel.queueDeclare(name, true, false, false, null)
+            if (prefetchCount != null) {
+                channel.basicQos(prefetchCount)
+            }
+            channel.basicConsume(name, true, deliverCallback) { _: String? -> } // consumerTag parameter
+        } catch (error: Exception) {
+            logger.error("CANNOT INITIALIZE QUEUE SERVER $error")
         }
-        channel.basicConsume(name, true, deliverCallback) { _: String? -> } // consumerTag parameter
     }
-    
 }

@@ -25,20 +25,25 @@ interface RabbitMqOptions {
 
 interface RpcOptions {
     val queueMaxSize: Int
+        get() = 100
     val timeOutMs: Int
+        get() = 10000
     val prefetchCount: Int
         get() = 1
 }
 
 interface RpcServerOptions {
     val timeOutMs: Int
+        get() = 10000
     val prefetchCount: Int
         get() = 1
 }
 
 interface ConnectionOptions {
     val maxRetry: Int?
+        get() = 1
     val timeOutMs: Int
+        get() = 10000
     val prefetchCount: Int?
         get() = 1
 }
