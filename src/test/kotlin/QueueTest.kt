@@ -13,12 +13,10 @@ class QueueTest {
     val clientManager = QueueManager(testhelper.testConfig)
     val serverManager = QueueManager(testhelper.testConfig)
 
+
+
     val queueServer =
-        serverManager.getQueueServer(queueName, MyTestQueueServer::class.java, options = object : ConnectionOptions {
-            override val maxRetry = 1
-            override val timeOutMs = 5000
-            override val prefetchCount = 1
-        }) as MyTestQueueServer
+        serverManager.getQueueServer(queueName, MyTestQueueServer::class.java) as MyTestQueueServer
 
     val queueClient = clientManager.getQueueClient(queueName) as QueueClient
 

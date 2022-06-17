@@ -6,11 +6,7 @@ open class QueueServer(
     open val queueConnection: QueueConnection,
     override var logger: Logger,
     override val name: String,
-    override val options: ConnectionOptions = object : ConnectionOptions {
-        override val maxRetry = 1
-        override val timeOutMs = 10000
-        override val prefetchCount = 1
-    }
+    override val options: ConnectionOptions
 ) : Subscriber(queueConnection, logger, name, options) {
 
 

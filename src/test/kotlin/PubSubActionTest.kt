@@ -16,11 +16,7 @@ class PubSubActionTest {
 
     init {
         pubManager.setLogger(testhelper.logger)
-        subscriber = subManager.getSubscriber(publisherName, options = object : ConnectionOptions {
-            override val maxRetry = 1
-            override val timeOutMs = 5000
-            override val prefetchCount = 1
-        }) as Subscriber
+        subscriber = subManager.getSubscriber(publisherName) as Subscriber
 
         publisher = pubManager.getPublisher(publisherName) as Publisher
 

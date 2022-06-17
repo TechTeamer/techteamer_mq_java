@@ -133,7 +133,7 @@ class QueueManager(private val config: QueueConfig) {
     fun getSubscriber(
         exchangeName: String,
         overrideClass: Any = Subscriber::class.java,
-        options: ConnectionOptions
+        options: ConnectionOptions = object : ConnectionOptions {}
     ): Any? {
         if (subscribers.contains(exchangeName)) return subscribers[exchangeName]
 
@@ -163,11 +163,12 @@ class QueueManager(private val config: QueueConfig) {
     }
 
     fun getQueueServer(
-        queueName: String, overrideClass: Any = QueueServer::class.java, options: ConnectionOptions
-    ): Any? {
+        queueName: String, overrideClass: Any = QueueServer::class.java, options: ConnectionOptions = object: ConnectionOptions
+        {}): Any? {
         if (queueServers.contains(queueName)) return queueServers[queueName]
 
         val myClass = overrideClass as Class<QueueServer>
+
         val queueServer = myClass.getConstructor(
             QueueConnection::class.java,
             Logger::class.java,

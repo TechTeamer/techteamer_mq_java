@@ -11,11 +11,7 @@ open class Subscriber(
     open var connection: QueueConnection,
     open var logger: Logger,
     open val name: String,
-    open val options: ConnectionOptions = object : ConnectionOptions {
-        override val maxRetry = 1
-        override val timeOutMs = 10000
-        override val prefetchCount = 1
-    }
+    open val options: ConnectionOptions
 ) {
     open val retryMap = mutableMapOf<String, Int>()
     open val actions = mutableMapOf<String, (

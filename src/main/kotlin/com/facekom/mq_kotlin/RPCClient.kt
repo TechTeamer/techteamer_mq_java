@@ -10,11 +10,7 @@ open class RPCClient constructor(
     open val connection: QueueConnection,
     open val rpcName: String,
     open val logger: Logger,
-    open val options: RpcOptions = object : RpcOptions {
-        override val queueMaxSize: Int = 100
-        override val timeOutMs: Int = 10000
-        override val prefetchCount: Int = 1
-    }
+    open val options: RpcOptions
 ) {
 
     private lateinit var client: RpcClient

@@ -29,10 +29,10 @@ class QueueMessageTest {
 
     @Test
     fun testFromJsonToQueueMessageWithValidData() {
-        val result = fromJsonToQueueMessage("{\"status\": \"ok\"}")
+        val result = fromJsonToQueueMessage("{\"status\": \"ok\", \"data\": {\"testData\": \"ok\"}, \"timeOut\": 10}")
 
         assertTrue {
-            result.status == "ok"
+            result.status == "ok" && result.data?.get("testData") == "ok" && result.timeOut == 10
         }
     }
 
@@ -52,7 +52,7 @@ class QueueMessageTest {
 
         assertTrue {
             result.status == "ok" &&
-            result.attachments.contains("test")
+                    result.attachments.contains("test")
         }
     }
 
@@ -63,7 +63,7 @@ class QueueMessageTest {
 
         assertTrue {
             result.status == "ok" &&
-            result.data?.get("test") == 1.0
+                    result.data?.get("test") == 1.0
         }
     }
 }

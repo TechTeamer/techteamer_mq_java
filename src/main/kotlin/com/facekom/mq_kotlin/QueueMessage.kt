@@ -71,7 +71,7 @@ fun fromJsonToQueueMessage(message: String): QueueMessage {
         )
 
         if (mappedData["timeOut"] != null) {
-            messageBack.timeOut = mappedData["timeOut"] as Int
+            messageBack.timeOut = (mappedData["timeOut"] as Double).toInt()
         }
 
         if (mappedData["attachArray"] != null) {

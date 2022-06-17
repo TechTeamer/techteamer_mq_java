@@ -8,10 +8,7 @@ open class RPCServerOverride(
     val connection: QueueConnection,
     val name: String,
     val logger: Logger,
-    open val options: RpcServerOptions = object : RpcServerOptions {
-        override val timeOutMs: Int = 10000
-        override val prefetchCount: Int = 1
-    },
+    open val options: RpcServerOptions,
     private val rpcServer: RPCServer
 ) : RpcServer(connection.getChannel(), name) {
 
@@ -75,10 +72,7 @@ open class RPCServer(
     val connection: QueueConnection,
     val name: String,
     val logger: Logger,
-    open val options: RpcServerOptions = object : RpcServerOptions {
-        override val timeOutMs: Int = 10000
-        override val prefetchCount: Int = 1
-    }
+    open val options: RpcServerOptions
 ) {
     open val actions = mutableMapOf<String, (
         Any,
