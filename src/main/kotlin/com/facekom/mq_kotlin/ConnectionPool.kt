@@ -45,12 +45,12 @@ class ConnectionPool(poolConfig: Map<String, String>) {
         return connections[name]
     }
 
-    fun hasConnection(name:String): Boolean {
+    fun hasConnection(name: String): Boolean {
         return connections[name] != null
     }
 
     fun connect() {
-        connections.forEach() {t ->
+        connections.forEach() { t ->
             t.value.connect()
         }
     }

@@ -15,8 +15,6 @@ interface QueueConfig {
 }
 
 interface RabbitMqOptions {
-    val rejectUnauthorized: Boolean
-        get() = false
     val key: String
     val trust: String
     val trustPwd: CharArray

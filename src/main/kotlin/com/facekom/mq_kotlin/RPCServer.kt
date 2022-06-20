@@ -15,6 +15,7 @@ open class RPCServerOverride(
     override fun processRequest(request: Delivery) {
         CoroutineScope(Dispatchers.IO).launch {
             super.processRequest(request)
+            cancel()
         }
     }
 
@@ -36,7 +37,7 @@ open class RPCServerOverride(
                     answer = rpcServer.callback(message, delivery, response)
                 }
             } catch (e: Exception) {
-                logger.error("TIMEOUT ${e.message}")
+                logger.error("ERROR ${e.message}")
                 timedOut = true
             }
         }

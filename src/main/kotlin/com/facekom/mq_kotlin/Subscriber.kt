@@ -63,7 +63,7 @@ open class Subscriber(
                 }
 
                 if (options.maxRetry != null && delivery.envelope.isRedeliver && counter > options.maxRetry!!) {
-                    logger.error("SUBSCRIBER TRIED TOO MANY TIMES $name, $request, ${delivery.body}")
+                    logger.error("SUBSCRIBER TRIED TOO MANY TIMES $name, ${request.data}, deliveryTag: $consumerTag")
                     ack(channel, delivery)
 
                     retryMap.remove(consumerTag)
@@ -84,8 +84,10 @@ open class Subscriber(
                 ack(channel, delivery)
                 retryMap.remove(consumerTag)
             } catch (e: Exception) {
-                logger.error("TIMEOUT BY SERVER SIDE $e")
+                logger.error("ERROR BY SERVER SIDE $e")
                 nack(channel, delivery)
+            } finally {
+                cancel()
             }
         }
 

@@ -41,6 +41,8 @@ open class RPCClient constructor(
     ): QueueMessage? {
         var correlationId: String
 
+        println(client.toString())
+
         do {
             correlationId = UUID.randomUUID().toString()
         } while (correlationIdList.contains(correlationId))

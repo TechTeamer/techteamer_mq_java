@@ -43,7 +43,7 @@ open class Publisher(
             }
 
             channel.basicPublish(exchange, "", props.build(), param.serialize())
-        } catch (error: java.lang.Exception) {
+        } catch (error: Exception) {
             logger.error("CANNOT PUBLISH MESSAGE, $exchange, $error")
         }
     }
