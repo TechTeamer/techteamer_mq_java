@@ -6,19 +6,17 @@ import kotlin.test.assertTrue
 
 class PubSubActionTest {
     private val testhelper = TestHelper()
-
     private val pubManager = QueueManager(testhelper.testConfig)
-    private val publisherName = "test-publisher-action"
-
     private val subManager = QueueManager(testhelper.testConfig)
+    private val publisherName = "techteamer-mq-java-test-publisher-action"
+
     var subscriber: Subscriber
     var publisher: Publisher
 
     init {
         pubManager.setLogger(testhelper.logger)
-        subscriber = subManager.getSubscriber(publisherName) as Subscriber
-
-        publisher = pubManager.getPublisher(publisherName) as Publisher
+        publisher = pubManager.getPublisher(publisherName)
+        subscriber = subManager.getSubscriber(publisherName)
 
         pubManager.connect()
         subManager.connect()

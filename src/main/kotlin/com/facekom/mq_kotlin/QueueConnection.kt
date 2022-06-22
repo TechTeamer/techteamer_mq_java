@@ -9,14 +9,12 @@ import javax.net.ssl.KeyManagerFactory
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManagerFactory
 
-class QueueConnection(val config: QueueConfig) {
-
+class QueueConnection(private val config: QueueConfig) {
     private var factory = ConnectionFactory()
-
     private lateinit var connection: Connection
+
     var myChannel: Channel? = null
     var logger = config.logger
-
 
     fun getChannel(): Channel {
         if (myChannel != null) return myChannel as Channel
@@ -46,7 +44,6 @@ class QueueConnection(val config: QueueConfig) {
 
         factory.setUri(config.url)
         connection = factory.newConnection(config.url)
-        getChannel()
     }
 
 }

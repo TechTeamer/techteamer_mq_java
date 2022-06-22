@@ -9,15 +9,11 @@ import kotlin.test.assertTrue
 
 class QueueTest {
     private val testhelper = TestHelper()
-    val queueName = "test-queue"
     val clientManager = QueueManager(testhelper.testConfig)
     val serverManager = QueueManager(testhelper.testConfig)
-
-
-    val queueServer =
-        serverManager.getQueueServer(queueName, MyTestQueueServer::class.java) as MyTestQueueServer
-
-    val queueClient = clientManager.getQueueClient(queueName) as QueueClient
+    val queueName = "techteamer-mq-java-test-queue"
+    val queueServer = serverManager.getQueueServer(queueName, MyTestQueueServer::class.java)
+    val queueClient = clientManager.getQueueClient(queueName)
 
     init {
         clientManager.connect()
@@ -49,7 +45,7 @@ class QueueTest {
                     get() = 3
             }) as MyTestQueueServerTimeOut
 
-        val client = clientManager.getQueueClient(name) as QueueClient
+        val client = clientManager.getQueueClient(name)
 
         serverManager.connect()
         clientManager.connect()
@@ -62,7 +58,7 @@ class QueueTest {
 
         assertTrue {
             delay(1300)
-            // because of timeouts and retries we will try to send the message 4 times (it means that we REtried it 3 times)
+            // because of timeouts and retries we will try to send the message 4 times (it means that we Retried it 3 times)
             return@assertTrue errorCounter == 3
         }
     }

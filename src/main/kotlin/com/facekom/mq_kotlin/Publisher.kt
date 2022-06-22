@@ -3,10 +3,7 @@ package com.facekom.mq_kotlin
 import com.rabbitmq.client.AMQP.BasicProperties
 import org.slf4j.Logger
 
-open class Publisher(
-    open val queueConnection: QueueConnection, open val logger: Logger, open val exchange: String
-) {
-
+open class Publisher(open val queueConnection: QueueConnection, open val logger: Logger, open val exchange: String) {
     open fun initialize() {
         val channel = queueConnection.getChannel()
         channel.exchangeDeclare(exchange, "fanout", true)
@@ -28,7 +25,7 @@ open class Publisher(
         timeOut: Int? = null,
         attachments: MutableMap<String, ByteArray> = mutableMapOf()
     ) {
-        var props = BasicProperties.Builder()
+        val props = BasicProperties.Builder()
 
         try {
             val channel = queueConnection.getChannel()

@@ -12,12 +12,10 @@ import kotlin.test.assertTrue
 var rpcServerTestResult: QueueMessage? = null
 
 class RPCTest {
-    val rpcName = "test-rpc"
     private val testhelper = TestHelper()
-
     private val queueManager = QueueManager(testhelper.testConfig)
-
     private var rpcClient: MyRPCClient? = null
+    val rpcName = "techteamer-mq-js-test-rpc"
 
     init {
         queueManager.getRPCServer(rpcName, MyRpcServer::class.java, options = object : RpcServerOptions {

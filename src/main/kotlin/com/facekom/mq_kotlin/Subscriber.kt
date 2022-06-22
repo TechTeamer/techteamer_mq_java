@@ -36,7 +36,6 @@ open class Subscriber(
         } catch (error: Exception) {
             logger.error("CANNOT INITIALIZE SUBSCRIBER $error")
         }
-
     }
 
     open val deliverCallback = DeliverCallback { consumerTag: String?, delivery: Delivery ->

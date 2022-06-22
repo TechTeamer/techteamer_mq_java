@@ -11,7 +11,7 @@ class ConnectionPool(poolConfig: Map<String, String>) {
     lateinit var defaultConnection: QueueManager
 
     fun setupQueueManagers(connectionConfigs: Map<String, QueueConfig>) {
-        var defaultConnectionConfig: QueueConfig? = connectionConfigs[defaultConnectionName]
+        val defaultConnectionConfig: QueueConfig? = connectionConfigs[defaultConnectionName]
 
         if (defaultConnectionConfig != null) {
             val connection = createConnection(defaultConnectionConfig)

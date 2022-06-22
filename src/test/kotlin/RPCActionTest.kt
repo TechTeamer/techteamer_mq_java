@@ -7,13 +7,10 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class RPCActionTest {
-    private val rpcName = "test-rpc-action"
     private val testhelper = TestHelper()
-
     private val queueManager = QueueManager(testhelper.testConfig)
-
+    private val rpcName = "techteamer-mq-js-test-rpc-action"
     private var rpcServer: RPCServer
-
     private var rpcClient: RPCClient
 
     init {
@@ -22,7 +19,7 @@ class RPCActionTest {
                 get() = 3
             override val timeOutMs: Int
                 get() = 10000
-        }) as RPCServer
+        })
 
         queueManager.connect()
 
@@ -33,7 +30,7 @@ class RPCActionTest {
                 get() = 1
             override val timeOutMs: Int
                 get() = 15000
-        }) as RPCClient
+        })
         queueManager.connect()
     }
 

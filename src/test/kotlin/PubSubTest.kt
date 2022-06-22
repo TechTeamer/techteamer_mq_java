@@ -12,11 +12,9 @@ private var sendStringResultTwo: QueueMessage? = null
 
 class PubSubTest {
     private val testhelper = TestHelper()
-
     private val pubManager = QueueManager(testhelper.testConfig)
-    private val publisherName = "test-publisher"
-
     private val subManager = QueueManager(testhelper.testConfig)
+    private val publisherName = "techteamer-mq-java-test-publisher"
 
     var publisher: MyTestPublisher
     var subscriber: MyTestSubscriber
