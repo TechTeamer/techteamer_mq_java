@@ -1,5 +1,6 @@
 package com.facekom.mq_kotlin
 
+import com.google.gson.JsonElement
 import com.rabbitmq.client.*
 import kotlinx.coroutines.*
 import org.slf4j.Logger
@@ -20,10 +21,10 @@ open class RPCServerOverride(
     }
 
     override fun handleCall(delivery: Delivery, replyProperties: AMQP.BasicProperties?): ByteArray {
-        val message: QueueMessage = unserialize(delivery.body)
+        val message: QueueMessage = QueueMessage.unserialize(delivery.body)
         val response = QueueResponse()
 
-        var answer: MutableMap<String, Any?>? = null
+        var answer: JsonElement? = null
         var timedOut = false
 
         var timeOut: Int = options.timeOutMs
@@ -31,10 +32,11 @@ open class RPCServerOverride(
         if (message.timeOut != null) {
             timeOut = message.timeOut!!
         }
+
         runBlocking {
             try {
                 withTimeout(timeOut.toLong()) {
-                    answer = rpcServer.callback(message, delivery, response)
+                    answer = rpcServer.callback(message.data, message, delivery, response)
                 }
             } catch (e: Exception) {
                 logger.error("ERROR ${e.message}")
@@ -43,27 +45,21 @@ open class RPCServerOverride(
         }
 
         if (timedOut) {
-            return QueueMessage("error", mutableMapOf("error" to "timeout")).serialize()
+            return QueueMessage.createErrorMessage("timeout").serialize()
         }
 
         val replyAttachments = response.attachments
 
         return try {
-            val reply: QueueMessage?
+            val reply = QueueMessage("ok", answer)
 
-            if (answer != null) {
-                reply = QueueMessage("ok", answer)
-                replyAttachments.forEach { t ->
-                    reply.addAttachment(t.key, t.value)
-                }
-
-                reply.serialize()
-            } else {
-                QueueMessage("ok", mutableMapOf("message" to "no reply generated")).serialize()
+            replyAttachments.forEach { t ->
+                reply.addAttachment(t.key, t.value)
             }
 
+            reply.serialize()
         } catch (err: Exception) {
-            QueueMessage("error", mutableMapOf("message" to "cannot encode answer")).serialize()
+            QueueMessage.createErrorMessage("cannot encode answer").serialize()
         }
 
     }
@@ -75,41 +71,52 @@ open class RPCServer(
     val logger: Logger,
     open val options: RpcServerOptions
 ) {
-    open val actions = mutableMapOf<String, (
-        Any,
-        data: MutableMap<String, Any?>,
-        delivery: Delivery,
-        response: QueueResponse,
-        request: QueueMessage
-    ) -> MutableMap<String, Any?>?>()
+    var _callback: RpcHandler? = null
+    open val actions = mutableMapOf<String, RpcHandler?>()
+    var initialized: Boolean = false
+
 
     fun initialize() {
-        val channel = connection.getChannel()
-        channel.exchangeDeclare(name, "direct", true)
-        channel.queueDeclare(name, true, false, false, null)
-        channel.queueBind(name, name, "$name-key")
-        channel.basicQos(options.prefetchCount)
+        if (initialized) {
+            logger.warn("RPCServer already initialized queue($name)")
+            return
+        }
 
-        val server = RPCServerOverride(
-            connection,
-            name,
-            logger,
-            options,
-            this
-        )
+        val durableQueue = options.queue.durable
+        val exclusiveQueue = options.queue.exclusive
+        val autoDeleteQueue = options.queue.autoDelete
 
-        server.mainloop()
+        try {
+            val channel = connection.getChannel()
+
+            if (options.queue.assert) {
+                channel.queueDeclare(name, durableQueue, exclusiveQueue, autoDeleteQueue, null)
+                logger.info("RPCServer initialized queue($name) durable($durableQueue) exclusive($exclusiveQueue) autoDelete($autoDeleteQueue)")
+            } else {
+                logger.info("RPCServer initialize queue($name) skipped assertion")
+            }
+
+            channel.basicQos(options.prefetchCount)
+
+            val server = RPCServerOverride(
+                connection,
+                name,
+                logger,
+                options,
+                this
+            )
+
+            server.mainloop()
+            initialized = true
+        } catch (error: Exception) {
+            logger.error("CANNOT INITIALIZE RPCServer queue($name) durable($durableQueue) exclusive($exclusiveQueue) autoDelete($autoDeleteQueue) $error")
+            throw error
+        }
     }
 
     open fun registerAction(
         action: String,
-        handler: (
-            Any,
-            data: MutableMap<String, Any?>,
-            delivery: Delivery,
-            response: QueueResponse,
-            request: QueueMessage
-        ) -> MutableMap<String, Any?>?
+        handler: RpcHandler
     ) {
         if (actions[action] != null) {
             logger.warn("Actions-handlers map already contains an action named $action")
@@ -118,15 +125,48 @@ open class RPCServer(
         }
     }
 
+    fun consume (callback: RpcHandler) {
+        _callback = callback
+    }
+
     open suspend fun callback(
-        data: QueueMessage,
+        data: JsonElement?,
+        request: QueueMessage,
         delivery: Delivery,
         response: QueueResponse,
-    ): MutableMap<String, Any?>? = run {
-        if ((data.data?.get("action") != null) && (actions[data.data["action"]] != null)) {
-            return actions[data.data["action"]]!!.invoke(this, data.data, delivery, response, data)
+    ): JsonElement? = run {
+        var handler : RpcHandler? = null
+        var messageBody = data
+
+        // handle action command received in message data
+        if (data != null && data.isJsonObject) {
+            val dataObj = data.asJsonObject
+            if (dataObj.has("action")) {
+                val actionEl = dataObj.get("action")
+                if (actionEl.isJsonPrimitive) {
+                    val actionPrimitive = actionEl.asJsonPrimitive
+                    if (actionPrimitive.isString) {
+                        val action = actionPrimitive.asString
+                        handler = actions.get(action)
+                        messageBody = dataObj.get("data")
+                    }
+                }
+            }
         }
-        return mutableMapOf("data" to null)
+
+        if (handler == null) {
+            if (_callback != null) {
+                handler = _callback
+            } else {
+                return null
+            }
+        }
+
+        if (handler != null) {
+            return handler.invoke(messageBody, request, response, delivery)
+        }
+
+        return null
     }
 
 }

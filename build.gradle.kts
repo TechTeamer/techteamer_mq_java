@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "com.facekom"
-version = "1.0"
+version = "1.0.0"
 
 repositories {
     mavenCentral()
@@ -22,12 +22,15 @@ dependencies {
     implementation(group = "ch.qos.logback", name = "logback-classic", version = "1.2.6")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
     implementation("org.jetbrains.kotlin:kotlin-test-junit:1.6.20")
-    testImplementation("junit:junit:4.12")
-    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.8.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
 }
 
 tasks.test {
-    useJUnitPlatform()
+    systemProperty("junit.jupiter.testinstance.lifecycle.default", "per_class")
+    useJUnitPlatform {
+        includeEngines("junit-jupiter")
+        excludeEngines("junit-vintage")
+    }
     finalizedBy(tasks.jacocoTestReport)
 }
 

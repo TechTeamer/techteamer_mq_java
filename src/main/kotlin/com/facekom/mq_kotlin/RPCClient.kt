@@ -1,8 +1,8 @@
 package com.facekom.mq_kotlin
 
-import com.rabbitmq.client.AMQP
-import com.rabbitmq.client.RpcClient
-import com.rabbitmq.client.RpcClientParams
+import com.google.gson.JsonElement
+import com.google.gson.JsonPrimitive
+import com.rabbitmq.client.*
 import org.slf4j.Logger
 import java.util.UUID
 
@@ -10,34 +10,82 @@ open class RPCClient constructor(
     open val connection: QueueConnection,
     open val rpcName: String,
     open val logger: Logger,
-    open val options: RpcOptions
+    open val options: RpcClientOptions
 ) {
-
     private lateinit var client: RpcClient
     private val correlationIdList = mutableListOf<String>()
-
+    var replyQueueName: String = ""
+    var initialized: Boolean = false
 
     fun initialize() {
-        val channel = connection.getChannel()
+        if (initialized) {
+            logger.warn("RPCClient already initialized queue($rpcName)")
+            return
+        }
 
-        val queue = channel.queueDeclare("", true, false, true, null).queue
+        try {
+            val channel = connection.getChannel()
+            _getReplyQueue(connection.getChannel())
 
-        val rpcOptions = RpcClientParams()
-        rpcOptions.channel(channel)
-        rpcOptions.exchange(rpcName)
-        rpcOptions.routingKey("$rpcName-key")
-        rpcOptions.replyTo(queue)
-        client = RpcClient(rpcOptions)
+            val rpcOptions = RpcClientParams()
+            rpcOptions.channel(channel)
+            rpcOptions.exchange("")
+            rpcOptions.routingKey(rpcName)
+            rpcOptions.replyTo(replyQueueName)
+            client = RpcClient(rpcOptions)
+            logger.warn("RPCClient initialized queue($rpcName)")
+            initialized = true
+        } catch (error: Exception) {
+            logger.error("CANNOT INITIALIZE RPCClient queue($rpcName) $error")
+            throw error
+        }
     }
 
-    open fun callAction(
-        action: String, data: MutableMap<String, Any?>, timeOutMs: Int?, attachments: MutableMap<String, ByteArray>?
+    fun _getReplyQueue(channel: Channel) {
+        replyQueueName = options.replyQueueName
+
+        if (options.replyQueue.assert) {
+            val durableReplyQueue = options.replyQueue.durable
+            val exclusiveReplyQueue = options.replyQueue.exclusive
+            val autoDeleteReplyQueue = options.replyQueue.autoDelete
+
+            replyQueueName = channel.queueDeclare(replyQueueName, durableReplyQueue, exclusiveReplyQueue, autoDeleteReplyQueue, null).queue
+            logger.info("RPCClient initialized reply queue($replyQueueName) durable($durableReplyQueue) exclusive($exclusiveReplyQueue) autoDelete($autoDeleteReplyQueue)")
+
+        } else {
+            logger.info("RPCClient initialize reply queue($replyQueueName) skipped assertion")
+        }
+    }
+
+    open fun <T>callAction(
+        action: QueueAction<T>,
+        timeOutMs: Int?,
+        attachments: MutableMap<String, ByteArray>?
     ): QueueMessage? {
-        return call(mutableMapOf("action" to action, "data" to data), timeOutMs, attachments)
+        return call(action.toJSON(), timeOutMs, attachments)
+    }
+
+    open fun callSimpleAction(
+        action: String,
+        data: String,
+        timeOutMs: Int?,
+        attachments: MutableMap<String, ByteArray>?
+    ): QueueMessage? {
+        return callAction(SimpleStringAction(action, data), timeOutMs, attachments)
     }
 
     open fun call(
-        message: MutableMap<String, Any?>, timeOutMs: Int? = null, attachments: MutableMap<String, ByteArray>? = null
+        message: String,
+        timeOutMs: Int? = null,
+        attachments: MutableMap<String, ByteArray>? = null
+    ) : QueueMessage? {
+        return call(JsonPrimitive(message), timeOutMs, attachments)
+    }
+
+    open fun call(
+        message: JsonElement,
+        timeOutMs: Int? = null,
+        attachments: MutableMap<String, ByteArray>? = null
     ): QueueMessage? {
         var correlationId: String
 
@@ -67,21 +115,21 @@ open class RPCClient constructor(
                 timeOut = timeOutMs
             }
 
-            val answer = timeOut.let { client.primitiveCall(props.build(), param.serialize(), timeOut) }
+            val answer = timeOut.let {
+                client.primitiveCall(props.build(), param.serialize(), timeOut)
+            }
 
             correlationIdList.remove(correlationId)
 
-            return unserialize(answer)
+            return QueueMessage.unserialize(answer)
         } catch (err: Exception) {
             correlationIdList.remove(correlationId)
             logger.error("RPC CLIENT: cannot make rpc call", err)
             throw Exception("RPC CLIENT: cannot make rpc call", err)
         }
-
     }
 
     fun getClient(): RpcClient {
         return client
     }
-
 }

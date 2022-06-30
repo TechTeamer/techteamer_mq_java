@@ -1,7 +1,6 @@
 package com.facekom.mq_kotlin
 
-import com.google.gson.Gson
-import com.google.gson.JsonParser
+import com.google.gson.*
 import java.math.BigInteger
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -10,100 +9,143 @@ private val gson = Gson()
 
 class QueueMessage(
     val status: String,
-    val data: MutableMap<String, Any?>?,
+    val data: JsonElement?,
     var timeOut: Int? = null
 ) {
-    var attachArray: MutableList<List<Any>> = mutableListOf()
     val attachments: MutableMap<String, ByteArray> = mutableMapOf()
 
     fun addAttachment(name: String, bytes: ByteArray) {
         attachments[name] = bytes
     }
 
-    fun serialize(): ByteArray {
+    fun serialize () : ByteArray {
+        val obj = JsonObject()
+        // {
+        //   status: this.status,
+        //   data: this.data,
+        //   timeOut: this.timeOut
+        //   attachArray: []
+        // }
+
+        // set status
+        obj.addProperty("status", status)
+
+        // set timeout
+        if (timeOut != null) {
+            obj.addProperty("timeOut", timeOut)
+        }
+
+        // set data
+        if (data != null) {
+            obj.add("data", data)
+        } else {
+            obj.add("data", JsonNull.INSTANCE)
+        }
+
+        // set attachments
         var attachmentBuffers = byteArrayOf()
-        val attachMap = mutableMapOf<String, Int>()
-        val mapToJson = mutableMapOf("status" to status, "data" to data)
-
-        attachments.forEach { entry ->
-            attachmentBuffers += entry.value
-            attachMap[entry.key] = entry.value.size
+        val attachArray = JsonArray()
+        attachments.forEach { name, attachmentBuffer ->
+            attachmentBuffers += attachmentBuffer
+            val attachMapEl = JsonArray()
+            attachMapEl.add(name)
+            attachMapEl.add(attachmentBuffer.size)
+            attachArray.add(attachMapEl) // name length pair: ["name", 1]
         }
+        obj.add("attachArray", attachArray)
 
-        mapToJson["attachArray"] = attachMap.toList().map {
-            listOf(it.first, it.second)
-        }
-
-        val stringJson = gson.toJson(mapToJson)
-
+        // compile output
+        val stringJson = gson.toJson(obj)
         val formatBuf = "+".toByteArray()
-
-        var lengthBuf = ByteBuffer.allocate(4)
-        lengthBuf.order(ByteOrder.BIG_ENDIAN)
-        lengthBuf.putInt(stringJson.length)
-
         val jsonBuf = stringJson.toByteArray()
+        val lengthBuf = ByteBuffer.allocate(4)
+            .order(ByteOrder.BIG_ENDIAN)
+            .putInt(jsonBuf.size)
+            .array()
 
-        return formatBuf + lengthBuf.array() + jsonBuf + attachmentBuffers
+        return formatBuf + lengthBuf + jsonBuf + attachmentBuffers
     }
 
-}
+    companion object {
+        private fun parseJsonMessagePart (jsonString: String) : JsonObject {
+            val parsedJson = JsonParser.parseString(jsonString)
 
-fun fromJsonToQueueMessage(message: String): QueueMessage {
-    try {
-        val parsedData = JsonParser.parseString(message).asJsonObject
+            if (!parsedJson.isJsonObject) {
+                throw Exception("Invalid message format: not an object")
+            }
 
-        val mappedData = gson.fromJson(parsedData, Map::class.java)
+            val messageObj = parsedJson.asJsonObject
 
-        if (mappedData["status"] == null) {
-            return QueueMessage("error", mutableMapOf("error" to "cannot decode JSON string"))
+            if (messageObj.get("status") == null) {
+                throw Exception("Missing status")
+            }
+
+            try {
+                messageObj.get("status")!!.asString
+            } catch (e: Exception) {
+                throw Exception("Invalid status")
+            }
+
+            try {
+                val timeoutEl = messageObj.get("timeOut")
+                timeoutEl?.asInt
+            } catch (e: Exception) {
+                throw Exception("Invalid timeout")
+            }
+
+            return messageObj
         }
 
-        var data: MutableMap<String, Any?>? = null
+        private fun createFromParsedMessage (parsedMessage: JsonObject) : QueueMessage {
+            val status = parsedMessage.get("status").asString!!
+            val timeoutEl = parsedMessage.get("timeOut")
+            val timeout = timeoutEl?.asInt
+            val dataEl = parsedMessage.get("data")
 
-        if (mappedData["data"] != null) {
-            data = mappedData["data"] as MutableMap<String, Any?>
+            return QueueMessage(status, dataEl, timeout)
         }
 
-        val messageBack = QueueMessage(
-            mappedData["status"] as String,
-            data
-        )
-
-        if (mappedData["timeOut"] != null) {
-            messageBack.timeOut = (mappedData["timeOut"] as Double).toInt()
+        fun createErrorMessage (errorMessage: String?) : QueueMessage {
+            val errorObj = JsonObject()
+            errorObj.add("error", JsonPrimitive(errorMessage ?: ""))
+            return QueueMessage("error", errorObj)
         }
 
-        if (mappedData["attachArray"] != null) {
-            messageBack.attachArray = mappedData["attachArray"] as MutableList<List<Any>>
+        fun fromJson(jsonString: String): QueueMessage {
+            try {
+                val parsedMessage = parseJsonMessagePart(jsonString)
+                return createFromParsedMessage(parsedMessage)
+            } catch (error: Exception) {
+                return createErrorMessage(error.message)
+            }
         }
 
-        return messageBack
-    } catch (error: Exception) {
-        return QueueMessage("error", mutableMapOf("error" to error))
-    }
-}
+        fun unserialize(byteArray: ByteArray): QueueMessage {
+            val stringFromBytes = String(byteArray)
 
-fun unserialize(byteArray: ByteArray): QueueMessage {
-    val stringFromBytes = String(byteArray)
-    if (stringFromBytes.startsWith('+')) {
+            if (stringFromBytes.startsWith('+')) {
+                val jsonLength = BigInteger(byteArray.slice(IntRange(1, 4)).toByteArray()).toInt()
+                val jsonString = String(byteArray.slice(IntRange(5, 4 + jsonLength)).toByteArray())
+                val parsedMessage = parseJsonMessagePart(jsonString)
+                val queueMessage = createFromParsedMessage(parsedMessage)
+                val attachArray = parsedMessage.get("attachArray").asJsonArray
+                var prevAttachmentLength = 5 + jsonLength
 
-        val jsonLength = BigInteger(byteArray.slice(IntRange(1, 4)).toByteArray()).toInt()
-        val received = fromJsonToQueueMessage(String(byteArray).slice(IntRange(5, 4 + jsonLength)))
-
-        var prevAttachmentLength = 5 + jsonLength
-        for (el in received.attachArray) {
-            received.addAttachment(
-                el[0] as String, byteArray.slice(
-                    IntRange(
-                        prevAttachmentLength, (prevAttachmentLength + el[1] as Double - 1).toInt()
-                    )
-                ).toByteArray()
-            )
-            prevAttachmentLength += (el[1] as Double).toInt()
+                for (el in attachArray) {
+                    val nameLengthPair = el.asJsonArray
+                    val attachmentName = nameLengthPair[0].asString
+                    val attachmentBufferLength = nameLengthPair[1].asInt
+                    val attachmentBufferEnd = (prevAttachmentLength + attachmentBufferLength - 1).toInt()
+                    val attachmentBuffer = byteArray
+                        .slice(IntRange(prevAttachmentLength, attachmentBufferEnd))
+                        .toByteArray()
+                    queueMessage.addAttachment(attachmentName, attachmentBuffer)
+                    prevAttachmentLength += attachmentBufferLength
+                }
+                return queueMessage
+            } else {
+                return fromJson(String(byteArray))
+            }
         }
-        return received
-    } else {
-        return fromJsonToQueueMessage(String(byteArray))
     }
 }

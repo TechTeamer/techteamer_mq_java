@@ -1,137 +1,78 @@
 import com.facekom.mq_kotlin.*
-import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Delivery
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.junit.Test
 import org.slf4j.Logger
-import java.lang.Thread.sleep
-import kotlin.test.assertTrue
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import kotlin.test.*
 
 var rpcServerTestResult: QueueMessage? = null
 
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RPCTest {
     private val testhelper = TestHelper()
     private val queueManager = QueueManager(testhelper.testConfig)
-    private var rpcClient: MyRPCClient? = null
-    val rpcName = "techteamer-mq-js-test-rpc"
+    private val rpcClient: RPCClient
+    private val rpcServer: RPCServer
+    val rpcName = "techteamer-mq-java-test-rpc"
 
     init {
-        queueManager.getRPCServer(rpcName, MyRpcServer::class.java, options = object : RpcServerOptions {
-            override val prefetchCount: Int
-                get() = 3
-            override val timeOutMs: Int
-                get() = 10000
-        }) as MyRpcServer
-        queueManager.connect()
+        val rpcClientOption = RpcClientOptions()
+        rpcClientOption.prefetchCount = 3
+        rpcClientOption.queueMaxSize = 5
+        rpcClientOption.timeOutMs = 15000
+        rpcClient = queueManager.getRPCClient(rpcName, rpcClientOption)
 
-        rpcClient = queueManager.getRPCClient(rpcName, MyRPCClient::class.java, options = object : RpcOptions {
-            override val prefetchCount: Int
-                get() = 3
-            override val queueMaxSize: Int
-                get() = 5
-            override val timeOutMs: Int
-                get() = 15000
-        }) as MyRPCClient
+        val rpcServerOptions = RpcServerOptions()
+        rpcServerOptions.prefetchCount = 3
+        rpcServerOptions.timeOutMs = 10000
+        rpcServerOptions.queue.durable = false
+        rpcServerOptions.queue.exclusive = true
+        rpcServer = queueManager.getRPCServer(rpcName, rpcServerOptions)
+
         queueManager.connect()
     }
 
     @Test
-    fun sendAndReceiveRpc() = runBlocking {
-        val result = rpcClient?.sendTest()
-        assertTrue {
-            return@assertTrue result?.data?.get("test") == "test" &&
-                    result.attachments.contains("testAtt") &&
-                    rpcServerTestResult?.data?.get("testData") == "test" &&
-                    rpcServerTestResult?.attachments?.contains("testAttachment") == true
+    fun testRpcEchoRoundtrip() = runBlocking {
+        var testMessageReceived = false
+
+        rpcServer.consume { data, request, response, delivery ->
+            testMessageReceived = true
+            return@consume data
+        }
+
+        val result = rpcClient.call(testhelper.stringData)
+        val error = testhelper.checkData(result?.data, testhelper.stringData)
+
+        assertTrue ("Message should have been received") {
+            testMessageReceived
+        }
+        assertTrue ("Response should be valid") {
+            error == null
         }
     }
 
     @Test
     fun rpcServerTimeoutTest() = runBlocking {
-        queueManager.getRPCServer("rpcServerDelayed", MyRpcServerTimeout::class.java, options = object :
-            RpcServerOptions {
-            override val prefetchCount: Int
-                get() = 3
-            override val timeOutMs: Int
-                get() = 1000
-        }) as MyRpcServerTimeout
-        queueManager.connect()
+        var testMessageReceived = false
 
-        val rpcClientTwo = queueManager.getRPCClient("rpcServerDelayed", MyRPCClient::class.java, options = object :
-            RpcOptions {
-            override val prefetchCount: Int
-                get() = 3
-            override val queueMaxSize: Int
-                get() = 5
-            override val timeOutMs: Int
-                get() = 15000
-        }) as MyRPCClient
-        queueManager.connect()
-
-        val res = rpcClientTwo.sendTest()
-
-        assertTrue {
-            return@assertTrue (res?.status == "error") &&
-                    (res.data?.get("error") == "timeout")
-        }
-    }
-
-    class MyRPCClient(
-        override val connection: QueueConnection,
-        override val rpcName: String,
-        override val logger: Logger,
-        override val options: RpcOptions
-    ) : RPCClient(connection, rpcName, logger, options) {
-
-        fun sendTest(): QueueMessage? {
-            return call(
-                mutableMapOf("testData" to "test"),
-                15000,
-                mutableMapOf("testAttachment" to "hello".toByteArray())
-            )
-        }
-    }
-
-    class MyRpcServer(
-        connection: QueueConnection,
-        name: String,
-        logger: Logger,
-        override val options: RpcServerOptions
-    ) : RPCServer(connection, name, logger, options) {
-
-        override suspend fun callback(
-            data: QueueMessage,
-            delivery: Delivery,
-            response: QueueResponse,
-        ): MutableMap<String, Any?> {
-            rpcServerTestResult = data
-            response.addAttachment("testAtt", "test".toByteArray())
-            response.addAttachment("testAtt2222", "test20".toByteArray())
-            response.ok("ok")
-            return mutableMapOf("test" to "test")
-        }
-    }
-
-    class MyRpcServerTimeout(
-        connection: QueueConnection,
-        name: String,
-        logger: Logger,
-        override val options: RpcServerOptions
-    ) :
-        RPCServer(connection, name, logger, options) {
-
-        override suspend fun callback(
-            data: QueueMessage,
-            delivery: Delivery,
-            response: QueueResponse,
-        ): MutableMap<String, Any?> {
+        rpcServer.consume { data, request, response, delivery -> runBlocking {
+            testMessageReceived = true
             delay(5000)
-            response.addAttachment("testAtt", "test".toByteArray())
-            response.addAttachment("testAtt2222", "test20".toByteArray())
-            response.ok("ok")
-            return mutableMapOf("test" to "test")
+            return@runBlocking data
+        }}
+
+        val result = rpcClient.call(testhelper.stringData)
+        val error = testhelper.checkData(result?.data, testhelper.stringData)
+
+        assertTrue ("Message should have been received") {
+            testMessageReceived
+        }
+        assertTrue ("Response should be valid") {
+            error == null
         }
     }
 }

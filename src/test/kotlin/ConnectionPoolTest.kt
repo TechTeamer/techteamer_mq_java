@@ -1,46 +1,87 @@
 import com.facekom.mq_kotlin.ConnectionPool
+import com.facekom.mq_kotlin.ConnectionPoolConfig
 import com.facekom.mq_kotlin.QueueConfig
 import com.facekom.mq_kotlin.QueueManager
-import org.junit.Test
-import kotlin.test.assertIs
-import kotlin.test.assertTrue
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import kotlin.test.*
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ConnectionPoolTest {
     private val testhelper = TestHelper()
+    val defaultConfig = testhelper.testConfig
+    val badConfig = QueueConfig()
+        .url("amqp://guest:gue@localhost:67/")
+    val defaultPoolConfig = ConnectionPoolConfig()
+    val defaultConnectionName = defaultPoolConfig.defaultConnectionName
 
     @Test
-    fun testConnection() {
-        val pool = ConnectionPool(mapOf("other" to "mydefaultname"))
-        pool.setLogger(testhelper.logger)
-        pool.setupQueueManagers(mapOf("mydefaultname" to testhelper.testConfig, "other" to testhelper.testConfig))
-        val queue = pool.defaultConnection
+    fun testDefaultConfig() {
+        val pool = ConnectionPool()
 
-        assertTrue(pool.hasConnection("mydefaultname"))
+        assertEquals(pool.defaultConnectionName, defaultConnectionName)
+    }
+
+    @Test
+    fun testDefaultConnectionSetup() {
+        val pool = ConnectionPool()
+        pool.setLogger(testhelper.logger)
+        pool.setupQueueManagers(mapOf(defaultConnectionName to defaultConfig))
+
+        assertTrue(pool.hasConnection(defaultConnectionName))
+        assertIs<QueueManager>(pool.defaultConnection)
+        assertSame(pool.getConnection(defaultConnectionName), pool.defaultConnection)
+    }
+
+    @Test
+    fun testCustomDefaultConnectionSetup() {
+        val customConnectionPoolConfig = ConnectionPoolConfig()
+        val customDefaultConnectionName = ""
+        customConnectionPoolConfig.defaultConnectionName = customDefaultConnectionName
+        val pool = ConnectionPool(customConnectionPoolConfig)
+        pool.setLogger(testhelper.logger)
+        pool.setupQueueManagers(mapOf(customDefaultConnectionName to defaultConfig, "other" to defaultConfig))
+
+        assertTrue(pool.hasConnection(customDefaultConnectionName))
         assertTrue(pool.hasConnection("other"))
-        assertIs<QueueManager>(queue)
+        assertIs<QueueManager>(pool.defaultConnection)
+        assertSame(pool.getConnection(customDefaultConnectionName), pool.defaultConnection)
     }
 
     @Test
     fun testConnect() {
-        val pool = ConnectionPool(mapOf("other" to "mydefaultname"))
+        val pool = ConnectionPool()
         pool.setLogger(testhelper.logger)
-        pool.setupQueueManagers(mapOf("mydefaultname" to testhelper.testConfig, "other" to testhelper.testConfig))
+        pool.setupQueueManagers(mapOf(defaultConnectionName to defaultConfig))
+
         pool.connect()
+
+        assertTrue { pool.connected }
+    }
+
+    @Test
+    fun testMultipleConnect() {
+        val pool = ConnectionPool()
+        pool.setLogger(testhelper.logger)
+        pool.setupQueueManagers(mapOf(defaultConnectionName to defaultConfig, "other" to defaultConfig))
+
+        pool.connect()
+
+        assertTrue { pool.connected }
     }
 
     @Test
     fun testConnectFail() {
-        val myWrongConfig = object : QueueConfig {
-            override var url = "amqp://guest:gue@localhost:67/"
-            override val options = null
+        val pool = ConnectionPool()
+        pool.setLogger(testhelper.logger)
+        pool.setupQueueManagers(mapOf(defaultConnectionName to defaultConfig, "bad" to badConfig))
+
+        assertFails ("Connection should fail with wrong config") {
+            pool.connect()
         }
 
-        val pool = ConnectionPool(mapOf("other" to "default"))
-        pool.setLogger(testhelper.logger)
-        pool.setupQueueManagers(mapOf("mydefaultname" to myWrongConfig))
-
-        pool.connect()
-
-        assertTrue { pool.connections["mydefaultname"]?.connection?.myChannel == null }
+        assertFalse {
+            pool.connected
+        }
     }
 }

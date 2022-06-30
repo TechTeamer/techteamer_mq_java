@@ -3,29 +3,31 @@ package com.facekom.mq_kotlin
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class ConnectionPool(poolConfig: Map<String, String>) {
-    var connections = mutableMapOf<String, QueueManager>()
-    var defaultConnectionName = poolConfig["defaultConnectionName"] ?: "default"
-
+class ConnectionPool(poolConfig: ConnectionPoolConfig = ConnectionPoolConfig()) {
     private var logger = LoggerFactory.getLogger("testLogger")
-    lateinit var defaultConnection: QueueManager
+
+    var connections = mutableMapOf<String, QueueManager>()
+    var defaultConnection: QueueManager? = null
+    var defaultConnectionName = poolConfig.defaultConnectionName
+    var connected: Boolean = false
+
+    fun setupQueueManagers(connectionConfig: QueueConfig) {
+        val connection = createConnection(connectionConfig)
+        registerConnection(defaultConnectionName, connection)
+        defaultConnection = connection
+    }
 
     fun setupQueueManagers(connectionConfigs: Map<String, QueueConfig>) {
         val defaultConnectionConfig: QueueConfig? = connectionConfigs[defaultConnectionName]
 
         if (defaultConnectionConfig != null) {
-            val connection = createConnection(defaultConnectionConfig)
-            registerConnection(defaultConnectionName, connection)
-            defaultConnection = connection
+            setupQueueManagers(defaultConnectionConfig)
         }
 
-        connectionConfigs.forEach { t ->
-            if (t.key == defaultConnectionName) return
-            val connection = createConnection(t.value)
-            registerConnection(t.key, connection)
-            if (!this::defaultConnection.isInitialized) {
-                defaultConnection = connection
-            }
+        connectionConfigs.forEach { (connectionName, connectionConfig) ->
+            if (connectionName == defaultConnectionName) return@forEach
+            val connection = createConnection(connectionConfig)
+            registerConnection(connectionName, connection)
         }
     }
 
@@ -50,8 +52,9 @@ class ConnectionPool(poolConfig: Map<String, String>) {
     }
 
     fun connect() {
-        connections.forEach() { t ->
-            t.value.connect()
+        connections.forEach { _, connection ->
+            connection.connect()
         }
+        connected = true
     }
 }

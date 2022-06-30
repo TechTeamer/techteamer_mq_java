@@ -1,135 +1,113 @@
 import com.facekom.mq_kotlin.*
-import com.rabbitmq.client.BasicProperties
-import com.rabbitmq.client.Delivery
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.junit.Test
-import org.slf4j.Logger
-import kotlin.test.assertTrue
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import kotlin.test.*
 
-private var sendStringResult: QueueMessage? = null
-private var sendStringResultTwo: QueueMessage? = null
-
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PubSubTest {
     private val testhelper = TestHelper()
+    private val timeoutMs = 5000
     private val pubManager = QueueManager(testhelper.testConfig)
     private val subManager = QueueManager(testhelper.testConfig)
+    private val subManager2 = QueueManager(testhelper.testConfig)
     private val publisherName = "techteamer-mq-java-test-publisher"
 
-    var publisher: MyTestPublisher
-    var subscriber: MyTestSubscriber
+    var publisher: Publisher
+    var subscriber: Subscriber
+    var subscriber2: Subscriber
 
     init {
+        val publisherOptions = PublisherOptions()
+        publisherOptions.exchange.durable = false
+        publisherOptions.exchange.autoDelete = true
         pubManager.setLogger(testhelper.logger)
-        publisher = pubManager.getPublisher(publisherName, MyTestPublisher::class.java) as MyTestPublisher
-        subscriber = subManager.getSubscriber(publisherName, MyTestSubscriber::class.java, object : ConnectionOptions {
-            override val maxRetry = 1
-            override val timeOutMs = 5000
-            override val prefetchCount = 1
-        }) as MyTestSubscriber
+        publisher = pubManager.getPublisher(publisherName, publisherOptions)
+
+        val subscriberOptions = SubscriberOptions()
+        subscriberOptions.connection.timeOutMs = 5000
+        subscriberOptions.exchange.durable = false
+        subscriberOptions.exchange.autoDelete = true
+        subscriber = subManager.getSubscriber(publisherName, subscriberOptions)
+        subscriber2 = subManager2.getSubscriber(publisherName, subscriberOptions)
 
         pubManager.connect()
         subManager.connect()
+        subManager2.connect()
     }
 
     @Test
     fun sendWithAttachment() = runBlocking {
-        delay(200)
-        publisher.sendIt("testMessage")
-        delay(200)
-        assertTrue {
-            val testData = sendStringResult?.data?.get("data") as Map<*, *>?
-            return@assertTrue testData?.get("testData") == "testMessage" &&
-                    sendStringResult?.attachments?.get("otherTest")
-                        ?.let { String(it) } == "testHello" &&
-                    sendStringResult?.data?.get("action") == "send"
+        var testMessageReceived = false
+        var testMessageValid = false
+
+        subscriber.consume { data, props, request, delivery -> run {
+            testMessageReceived = true
+            if (data != null && !data.isJsonPrimitive) return@consume
+            val dataString = data?.asString
+            testMessageValid = dataString == ("testData")
+        }}
+
+        publisher.send("testData", attachments = testhelper.attachmentList)
+
+        delay(timeoutMs.toLong()) // allow time for network
+
+        assertTrue ("Message should have arrived") {
+            testMessageReceived
+        }
+        assertTrue ("Message should be valid") {
+            testMessageValid
         }
     }
 
     @Test
     fun sendToMoreSubscribers() = runBlocking {
-        val otherSubManager = QueueManager(testhelper.testConfig)
+        var testMessageReceived = 0
+        var testMessageValid = 0
+        val commonConsumer : QueueHandler = { data, props, request, delivery -> run {
+            testMessageReceived++
+            if (data != null && !data.isJsonPrimitive) return@run
 
-        otherSubManager.getSubscriber(publisherName, MyTestSubscriberTwo::class.java, object : ConnectionOptions {
-            override val maxRetry = 1
-            override val timeOutMs = 5000
-            override val prefetchCount = 1
-        }) as MyTestSubscriberTwo
+            if (data?.asString == ("testData")) {
+                testMessageValid++
+            }
+        }}
 
-        otherSubManager.connect()
-        delay(200)
+        subscriber.consume(commonConsumer)
+        subscriber2.consume(commonConsumer)
 
-        publisher.sendIt("testNewMessage")
-        delay(200)
+        publisher.send("testData", attachments = testhelper.attachmentList)
 
+        delay(timeoutMs.toLong()) // allow time for network
 
-        assertTrue {
-            val testData = sendStringResult?.data?.get("data") as Map<*, *>?
-            val testDataTwo = sendStringResultTwo?.data?.get("data") as Map<*, *>?
-
-            return@assertTrue testData?.get("testData") == "testNewMessage" &&
-                    sendStringResult?.attachments?.get("otherTest")
-                        ?.let { String(it) } == "testHello" &&
-                    sendStringResult?.data?.get("action") == "send" &&
-                    testDataTwo?.get("testData") == "testNewMessage" &&
-                    sendStringResultTwo?.attachments?.get("otherTest")
-                        ?.let { String(it) } == "testHello" &&
-                    sendStringResultTwo?.data?.get("action") == "send"
+        assertTrue ("Both messages should have arrived: $testMessageReceived != 2") {
+            testMessageReceived == 2
+        }
+        assertTrue ("Both message should be valid: $testMessageValid != 2") {
+            testMessageValid == 2
         }
     }
 
+    @Test
+    fun testSubscriberRegisterAction() = runBlocking {
+        var testMessageReceived = false
+        var testResult: String? = null
 
-    class MyTestPublisher(
-        override val queueConnection: QueueConnection, override val logger: Logger, override val exchange: String
-    ) : Publisher(queueConnection, logger, exchange) {
-        fun sendIt(msg: String) {
-            sendAction(
-                "send", mutableMapOf("testData" to msg), attachments = mutableMapOf(
-                    "publisherTestAttachment" to "hello".toByteArray(), "otherTest" to "testHello".toByteArray()
-                )
-            )
+        subscriber.registerAction("testAction") { data, _, request, _ ->
+            testMessageReceived = true
+            testResult = testhelper.checkData(data, testhelper.stringData)
         }
-    }
 
-    class MyTestPublisherNotOk(
-        override val queueConnection: QueueConnection, override val logger: Logger, override val exchange: String
-    ) : Publisher(queueConnection, logger, exchange) {
-        fun sendIt(msg: String) {
-            sendAction(
-                "send", mutableMapOf("testData" to msg), attachments = mutableMapOf(
-                    "publisherTestAttachment" to "hello".toByteArray(), "otherTest" to "testHello".toByteArray()
-                )
-            )
+        publisher.sendSimpleAction("testAction", testhelper.string)
+
+        delay(timeoutMs.toLong())
+
+        assertTrue ("Message should have been processed") {
+            testMessageReceived
         }
-    }
-
-    class MyTestSubscriber(
-        override var connection: QueueConnection,
-        override var logger: Logger,
-        override val name: String,
-        override val options: ConnectionOptions
-    ) : Subscriber(connection, logger, name, options) {
-        override suspend fun callback(
-            data: MutableMap<String, Any?>, props: BasicProperties, request: QueueMessage, delivery: Delivery
-        ): Any? {
-            sendStringResult = request
-
-            return null
-        }
-    }
-
-    class MyTestSubscriberTwo(
-        override var connection: QueueConnection,
-        override var logger: Logger,
-        override val name: String,
-        override val options: ConnectionOptions
-    ) : Subscriber(connection, logger, name, options) {
-        override suspend fun callback(
-            data: MutableMap<String, Any?>, props: BasicProperties, request: QueueMessage, delivery: Delivery
-        ): Any? {
-            sendStringResultTwo = request
-
-            return null
+        assertTrue ("Message data should match") {
+            testResult == null
         }
     }
 }
