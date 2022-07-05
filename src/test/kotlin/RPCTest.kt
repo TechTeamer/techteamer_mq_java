@@ -37,6 +37,18 @@ class RPCTest {
     }
 
     @Test
+    fun testConsumeCallback() = runBlocking {
+        val oldCallback = rpcServer._callback
+        val newCallback: RpcHandler =
+            { data, props, request, delivery -> run { return@run JsonParser.parseString(testhelper.jsonStringMessage) } }
+        rpcServer.consume(newCallback)
+
+        assertTrue("Consume call should set new message handler callback") {
+            oldCallback !== rpcServer._callback && newCallback == rpcServer._callback
+        }
+    }
+
+    @Test
     fun testRpcEchoRoundtrip() = runBlocking {
         var testMessageReceived = false
 
@@ -57,6 +69,22 @@ class RPCTest {
     }
 
     @Test
+    fun testRpcStringMessage() = runBlocking {
+        var testMessageReceived = false
+
+        rpcServer.consume { data, request, response, delivery ->
+            testMessageReceived = true
+            return@consume data
+        }
+
+        val result = rpcClient.call(testhelper.string)
+
+        assertTrue("Message should have been received") {
+            testMessageReceived
+        }
+    }
+
+    @Test
     fun registerRPCActionTest() {
         rpcServer.registerAction("testAction") { data, request, response, delivery ->
             response.addAttachment("testAttachmentAnswer", "helloAnswer".toByteArray())
@@ -65,7 +93,7 @@ class RPCTest {
 
         class MyAction(myAction: String) : QueueAction<String>(myAction) {
             override val data: String
-                get() = "{\"test\": \"data\"}"
+                get() = testhelper.jsonStringMessage
 
             override fun getData(): JsonElement {
                 return JsonParser.parseString(data)
@@ -81,11 +109,11 @@ class RPCTest {
             mutableMapOf("testAttachment" to "helloTest".toByteArray())
         )
 
-        val data = result?.data?.asJsonObject?.get("test")?.asString
+        val data = result?.data?.asJsonObject?.get("data")?.asString
         val attachment = result?.attachments?.get("testAttachmentAnswer")
 
         assertTrue {
-            data == "data" && attachment?.let { String(it) } == "helloAnswer"
+            data == "test" && attachment?.let { String(it) } == "helloAnswer"
         }
     }
 

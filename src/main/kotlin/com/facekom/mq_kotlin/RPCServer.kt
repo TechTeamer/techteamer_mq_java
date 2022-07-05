@@ -79,7 +79,7 @@ open class RPCServer(
     val logger: Logger,
     open val options: RpcServerOptions
 ) {
-    private var _callback: RpcHandler? = null
+    var _callback: RpcHandler? = null
     open val actions = mutableMapOf<String, RpcHandler?>()
     var initialized: Boolean = false
 
