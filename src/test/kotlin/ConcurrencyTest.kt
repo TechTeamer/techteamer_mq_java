@@ -8,74 +8,71 @@ import kotlin.test.*
 class ConcurrencyTest {
     private val testhelper = TestHelper()
     private val queueManager = QueueManager(testhelper.testConfig)
+    private val queueManagerTwo = QueueManager(testhelper.testConfig)
     val rpcName = "techteamer-mq-java-test-rpc-concurrency"
+    val rpcClientOptions = RpcClientOptions()
+    val rpcServerOptions = RpcServerOptions()
+
+    val queueName = "techteamer-mq-java-test-queue-concurrency"
+    val queueServerOptions = QueueServerOptions()
+    val connectionOptions = ConnectionOptions()
+
+    val exchangeName = "techteamer-mq-java-test-pubsub-concurrency"
     private var rpcServer: RPCServer
     private var rpcClient: RPCClient
+    private lateinit var rpcClientTwo: RPCClient
+    private var queueServer: QueueServer
+    private var queueClient: QueueClient
+    private var subscriber: Subscriber
+    private lateinit var subscriberTwo: Subscriber
+    private var publisher: Publisher
 
     init {
-        val rpcClientOptions = RpcClientOptions()
         rpcClientOptions.prefetchCount = 3
         rpcClientOptions.queueMaxSize = 1
         rpcClientOptions.timeOutMs = 15000
         rpcClient = queueManager.getRPCClient(rpcName, options = rpcClientOptions)
+        rpcClientTwo = queueManagerTwo.getRPCClient(rpcName, rpcClientOptions)
 
-        val rpcServerOptions = RpcServerOptions()
         rpcServerOptions.prefetchCount = 3
         rpcServerOptions.timeOutMs = 10000
         rpcServerOptions.queue.durable = false
         rpcServerOptions.queue.exclusive = true
         rpcServer = queueManager.getRPCServer(rpcName, options = rpcServerOptions)
 
+        connectionOptions.prefetchCount = 2
+        queueServerOptions.connection = connectionOptions
+
+        queueServer = queueManager.getQueueServer(queueName, options = queueServerOptions)
+        queueClient = queueManager.getQueueClient(queueName)
+
+        publisher = queueManager.getPublisher(exchangeName)
+        subscriber = queueManager.getSubscriber(exchangeName)
+        subscriberTwo = queueManagerTwo.getSubscriber(exchangeName)
+
         queueManager.connect()
+        queueManagerTwo.connect()
     }
 
     @Test
     fun rpcServerNonBlockingTest() = runBlocking {
         assertTrue {
-            val fastAnswer: QueueMessage?
+            rpcServer.registerAction("testAction") { data, request, response, delivery ->
+                return@registerAction null
+            }
+
+            rpcServer.registerAction("testAction2") { data, request, response, delivery ->
+                runBlocking {
+                    Thread.sleep(1000)
+                    return@runBlocking null
+                }
+            }
+
             var slowAnswer: QueueMessage? = null
-            val queueName = "techteamer-mq-java-rpc-non-blocking"
-
             var call2Started = false
-
-            val rpcServerOptions = RpcServerOptions()
-            rpcServerOptions.prefetchCount = 3
-            rpcServerOptions.timeOutMs = 10000
-            rpcServerOptions.queue.durable = false
-            rpcServerOptions.queue.exclusive = true
-            val server = queueManager.getRPCServer(queueName, rpcServerOptions)
-
-            server.registerAction("testAction") { data, request, response, delivery ->
-                return@registerAction null
-            }
-
-            server.registerAction("testAction2") { data, request, response, delivery ->
-                Thread.sleep(1000)
-                return@registerAction null
-            }
-
-            val rpcClientOptions = RpcClientOptions()
-            rpcClientOptions.prefetchCount = 3
-            rpcClientOptions.queueMaxSize = 5
-            rpcClientOptions.timeOutMs = 15000
-            val client0 = queueManager.getRPCClient(queueName, rpcClientOptions)
-
-            queueManager.connect()
-
             CoroutineScope(Dispatchers.IO).launch {
-                val pool2 = ConnectionPool()
-
-                pool2.setupQueueManagers(mapOf("default" to testhelper.testConfig))
-
-                val queue2 = pool2.defaultConnection!!
-                val rpcClientOptions2 = RpcClientOptions()
-                rpcClientOptions2.prefetchCount = 3
-                rpcClientOptions2.queueMaxSize = 5
-                rpcClientOptions2.timeOutMs = 15000
-                val client = queue2.getRPCClient(queueName, rpcClientOptions2)
-                pool2.connect()
                 call2Started = true
-                slowAnswer = client.callSimpleAction("testAction2", "testData", null, null)
+                slowAnswer = rpcClientTwo.callSimpleAction("testAction2", "testData", null, null)
             }
 
             Thread.sleep(300)
@@ -83,17 +80,78 @@ class ConcurrencyTest {
             assertTrue {
                 call2Started
             }
-            fastAnswer = client0.callSimpleAction("testAction", "testData", null, null)
 
-            val fasterCallFinished = fastAnswer != null && slowAnswer == null
+            val fastAnswer: QueueMessage? = rpcClient.callSimpleAction("testAction", "testData", null, null)
 
-            delay(500)
-            val statement2 = fastAnswer != null && slowAnswer == null
-
+            val fastAnswerFinished = fastAnswer != null && slowAnswer == null
             delay(1500)
-            val statement3 = fastAnswer != null && slowAnswer != null
+            val bothAnswerFinished = fastAnswer != null && slowAnswer != null
 
-            return@assertTrue fasterCallFinished && statement2 && statement3
+            return@assertTrue fastAnswerFinished && bothAnswerFinished
+        }
+    }
+
+    @Test
+    fun queueServerNonBlockingTest() = runBlocking {
+        assertTrue {
+            var messageFast: QueueMessage? = null
+            var messageSlow: QueueMessage? = null
+            queueServer.registerAction("testAction") { _, _, request, _ ->
+                messageFast = request
+                return@registerAction
+            }
+
+            queueServer.registerAction("testAction2") { _, _, request, _ ->
+                Thread.sleep(1000)
+                messageSlow = request
+                return@registerAction
+            }
+
+            CoroutineScope(Dispatchers.IO).launch {
+                queueClient.sendSimpleAction("testAction2", "testData", null, null)
+            }
+
+            Thread.sleep(300)
+
+            queueClient.sendSimpleAction("testAction", "testData", null, null)
+
+
+            delay(200)
+            val fastAnswerFinished = messageFast != null && messageSlow == null
+            delay(5000)
+            val bothAnswerFinished = messageFast != null && messageSlow != null
+
+            return@assertTrue fastAnswerFinished && bothAnswerFinished
+        }
+    }
+
+    @Test
+    fun pubSubNonBlockingTest() = runBlocking {
+        assertTrue {
+            var messageFast: QueueMessage? = null
+            var messageSlow: QueueMessage? = null
+
+            subscriberTwo.registerAction("testAction") { _, _, request, _ ->
+                Thread.sleep(1000)
+                messageSlow = request
+                return@registerAction
+            }
+
+            subscriber.registerAction("testAction") { _, _, request, _ ->
+                messageFast = request
+                return@registerAction
+            }
+
+            Thread.sleep(300)
+
+            publisher.sendSimpleAction("testAction", "testData", null, null)
+
+            delay(200)
+            val fastAnswerFinished = messageFast != null && messageSlow == null
+            delay(5000)
+            val bothAnswerFinished = messageFast != null && messageSlow != null
+
+            return@assertTrue fastAnswerFinished && bothAnswerFinished
         }
     }
 }

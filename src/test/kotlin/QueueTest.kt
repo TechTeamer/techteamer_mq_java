@@ -1,5 +1,6 @@
 import com.facekom.mq_kotlin.*
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -21,7 +22,8 @@ class QueueTest {
 
     init {
         testhelper.logger.debug("NEW QUEUE TEST")
-        queueClientOptions.queue.assert = false // skip queue assertion for client, b/c the server initiates it exclusively
+        queueClientOptions.queue.assert =
+            false // skip queue assertion for client, b/c the server initiates it exclusively
         queueClient = clientManager.getQueueClient(queueName, queueClientOptions)
 
         queueServerOptions.queue.durable = false
@@ -42,10 +44,10 @@ class QueueTest {
     @Test
     fun testConsumeCallback() = runBlocking {
         val oldCallback = queueServer._callback
-        val newCallback : QueueHandler = { data, props, request, delivery -> run {}}
+        val newCallback: QueueHandler = { data, props, request, delivery -> run {} }
         queueServer.consume(newCallback)
 
-        assertTrue ("Consume call should set new message handler callback") {
+        assertTrue("Consume call should set new message handler callback") {
             oldCallback !== queueServer._callback && newCallback == queueServer._callback
         }
     }
@@ -55,21 +57,23 @@ class QueueTest {
         var testMessageReceived = false
         var testMessageValid = false
 
-        queueServer.consume { data, props, request, delivery -> run {
-            testMessageReceived = true
-            if (data != null && !data.isJsonPrimitive) return@consume
-            val dataString = data?.asString
-            testMessageValid = dataString == "testData"
-        }}
+        queueServer.consume { data, props, request, delivery ->
+            run {
+                testMessageReceived = true
+                if (data != null && !data.isJsonPrimitive) return@consume
+                val dataString = data?.asString
+                testMessageValid = dataString == "testData"
+            }
+        }
 
         queueClient.send("testData")
 
         delay(timeoutMs.toLong()) // allow time for network
 
-        assertTrue ("Message should have arrived") {
+        assertTrue("Message should have arrived") {
             testMessageReceived
         }
-        assertTrue ("Message should be valid") {
+        assertTrue("Message should be valid") {
             testMessageValid
         }
     }
@@ -77,25 +81,30 @@ class QueueTest {
     @Test
     fun testQueueMessageMaxRetry() = runBlocking {
         var consumeCalled = 0
-        queueServer.consume { data, props, request, delivery -> run {
-            consumeCalled++
-            throw Exception("message not processed well")
-        }}
+        queueServer.consume { data, props, request, delivery ->
+            run {
+                consumeCalled++
+                throw Exception("message not processed well")
+            }
+        }
 
         queueClient.send("")
 
         delay(timeoutMs.toLong()) // allow time for network
 
-        assertTrue ("Call count ($consumeCalled) differs from max retry count ($maxRetry)") {
+        assertTrue("Call count ($consumeCalled) differs from max retry count ($maxRetry)") {
             consumeCalled == maxRetry + 1
         }
     }
 
     @Test
     fun testQueueMessageTimeOut() = runBlocking {
-        queueServer.consume { data, props, request, delivery -> runBlocking {
+        var timeoutHandledWell = true
+        queueServer.consume { _, _, _, _ ->
+            suspend {
                 queueServer.logger.debug("GOT")
                 delay((timeoutMs + 500).toLong())
+                timeoutHandledWell = false
                 queueServer.logger.debug("LOST")
             }
         }
@@ -104,9 +113,7 @@ class QueueTest {
         queueServer.logger.debug("SENT")
         delay((timeoutMs + 1000).toLong()) // allow time for network
         queueServer.logger.debug("WAITED")
+        assertTrue { timeoutHandledWell }
 
-//        assertTrue ("Call count ($consumeCalled) differs from max retry count ($maxRetry)") {
-//            consumeCalled == maxRetry + 1
-//        }
     }
 }

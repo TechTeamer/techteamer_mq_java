@@ -63,26 +63,39 @@ class PubSubTest {
 
     @Test
     fun sendToMoreSubscribers() = runBlocking {
-        var testMessageReceived = 0
+        var testMessageReceivedOne = 0
+        var testMessageReceivedTwo = 0
         var testMessageValid = 0
-        val commonConsumer : QueueHandler = { data, props, request, delivery -> run {
-            testMessageReceived++
+        val consumerOne : QueueHandler = { data, props, request, delivery -> run {
+
             if (data != null && !data.isJsonPrimitive) return@run
 
             if (data?.asString == ("testData")) {
                 testMessageValid++
             }
+            testMessageReceivedOne++
         }}
 
-        subscriber.consume(commonConsumer)
-        subscriber2.consume(commonConsumer)
+        val consumerTwo : QueueHandler = { data, props, request, delivery -> run {
+
+            if (data != null && !data.isJsonPrimitive) return@run
+
+            if (data?.asString == ("testData")) {
+                testMessageValid++
+            }
+            testMessageReceivedTwo++
+        }}
+
+        subscriber.consume(consumerOne)
+        subscriber2.consume(consumerTwo)
 
         publisher.send("testData", attachments = testhelper.attachmentList)
 
         delay(timeoutMs.toLong()) // allow time for network
 
-        assertTrue ("Both messages should have arrived: $testMessageReceived != 2") {
-            testMessageReceived == 2
+        assertTrue ("Both messages should have arrived: $testMessageReceivedOne != 2") {
+            testMessageReceivedOne == 1
+            testMessageReceivedTwo == 1
         }
         assertTrue ("Both message should be valid: $testMessageValid != 2") {
             testMessageValid == 2

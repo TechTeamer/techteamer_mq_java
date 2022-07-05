@@ -5,8 +5,6 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
 import com.rabbitmq.client.BasicProperties
 import com.rabbitmq.client.Delivery
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 typealias QueueHandler = (
     data: JsonElement?,
@@ -15,7 +13,7 @@ typealias QueueHandler = (
     delivery: Delivery
 ) -> Unit
 
-typealias RpcHandler = (
+typealias RpcHandler = suspend (
     data: JsonElement?,
     request: QueueMessage,
     response: QueueResponse,
@@ -23,13 +21,13 @@ typealias RpcHandler = (
 ) -> JsonElement?
 
 interface JsonSerializable {
-    fun toJSON() : JsonElement
+    fun toJSON(): JsonElement
 }
 
 abstract class QueueAction<T>(val action: String) : JsonSerializable {
     abstract val data: T
 
-    abstract fun getData() : JsonElement
+    abstract fun getData(): JsonElement
 
     override fun toJSON(): JsonElement {
         val obj = JsonObject()
@@ -40,9 +38,9 @@ abstract class QueueAction<T>(val action: String) : JsonSerializable {
 }
 
 class SimpleStringAction(
-        action: String,
-        override val data: String
-    ) : QueueAction<String>(action) {
+    action: String,
+    override val data: String
+) : QueueAction<String>(action) {
 
     override fun getData(): JsonElement {
         return JsonPrimitive(data)
@@ -110,6 +108,6 @@ open class QueueClientOptions {
 }
 
 open class QueueServerOptions {
-    val connection: ConnectionOptions = ConnectionOptions()
+    var connection: ConnectionOptions = ConnectionOptions()
     val queue: AssertQueueOptions = AssertQueueOptions()
 }

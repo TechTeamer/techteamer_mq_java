@@ -26,6 +26,7 @@ open class RPCServerOverride(
 
         var answer: JsonElement? = null
         var timedOut = false
+        var errored = false
 
         var timeOut: Int = options.timeOutMs
 
@@ -38,14 +39,21 @@ open class RPCServerOverride(
                 withTimeout(timeOut.toLong()) {
                     answer = rpcServer.callback(message.data, message, delivery, response)
                 }
+            } catch (e: TimeoutCancellationException) {
+                logger.error("Timeout in Rpc server $e")
+                timedOut = true
             } catch (e: Exception) {
                 logger.error("ERROR ${e.message}")
-                timedOut = true
+                errored = true
             }
         }
 
         if (timedOut) {
             return QueueMessage.createErrorMessage("timeout").serialize()
+        }
+
+        if (errored) {
+            return QueueMessage.createErrorMessage("error during handle rpc request").serialize()
         }
 
         val replyAttachments = response.attachments
@@ -71,7 +79,7 @@ open class RPCServer(
     val logger: Logger,
     open val options: RpcServerOptions
 ) {
-    var _callback: RpcHandler? = null
+    private var _callback: RpcHandler? = null
     open val actions = mutableMapOf<String, RpcHandler?>()
     var initialized: Boolean = false
 
