@@ -1,4 +1,7 @@
 import com.facekom.mq_kotlin.*
+import com.google.gson.JsonElement
+import com.rabbitmq.client.BasicProperties
+import com.rabbitmq.client.Delivery
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -100,14 +103,20 @@ class QueueTest {
     @Test
     fun testQueueMessageTimeOut() = runBlocking {
         var timeoutHandledWell = true
-        queueServer.consume { _, _, _, _ ->
-            suspend {
-                queueServer.logger.debug("GOT")
-                delay((timeoutMs + 500).toLong())
-                timeoutHandledWell = false
-                queueServer.logger.debug("LOST")
-            }
+
+        suspend fun cb(
+            data: JsonElement?,
+            props: BasicProperties,
+            request: QueueMessage,
+            delivery: Delivery
+        ) {
+            queueServer.logger.debug("GOT")
+            delay((timeoutMs + 1500).toLong())
+            timeoutHandledWell = false
+            queueServer.logger.debug("LOST")
         }
+
+        queueServer.consume(::cb)
 
         queueClient.send("")
         queueServer.logger.debug("SENT")

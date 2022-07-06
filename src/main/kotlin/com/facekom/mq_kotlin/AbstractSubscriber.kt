@@ -87,20 +87,23 @@ abstract class AbstractSubscriber(
             timeOut = request.timeOut!!
         }
 
-        try {
-            withTimeout(timeOut.toLong()) {
-                callback(request.data, delivery.properties, request, delivery)
+        runBlocking {
+            try {
+                withTimeout(timeOut.toLong()) {
+                    callback(request.data, delivery.properties, request, delivery)
+                }
+
+                ack(channel, delivery)
+                retryMap.remove(consumerTag)
+            } catch (e: TimeoutCancellationException) {
+                logger.error("Timeout in Subscriber $e")
+                nack(channel, delivery)
+            } catch (e: Exception) {
+                logger.error("Error processing incoming message $e")
+                nack(channel, delivery)
+            } finally {
+                cancel()
             }
-            ack(channel, delivery)
-            retryMap.remove(consumerTag)
-        } catch (e: TimeoutCancellationException) {
-            logger.error("Timeout in Subscriber $e")
-            nack(channel, delivery)
-        } catch (e: Exception) {
-            logger.error("Error processing incoming message $e")
-            nack(channel, delivery)
-        } finally {
-            cancel()
         }
     }
 

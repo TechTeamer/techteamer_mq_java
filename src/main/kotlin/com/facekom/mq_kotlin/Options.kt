@@ -6,7 +6,7 @@ import com.google.gson.JsonPrimitive
 import com.rabbitmq.client.BasicProperties
 import com.rabbitmq.client.Delivery
 
-typealias QueueHandler = (
+typealias QueueHandler = suspend (
     data: JsonElement?,
     props: BasicProperties,
     request: QueueMessage,
