@@ -171,8 +171,11 @@ class ConcurrencyTest {
 
             delay(300)
 
+            assertTrue {
+                callOneStarted != null && callTwoStarted != null && callOneFinished != null && callTwoFinished != null
+            }
+
             val diff = abs(callOneStarted?.time!! - callTwoStarted?.time!!)
-            println(diff)
 
             return@assertTrue diff < 100 && callOneFinished!! < callTwoFinished
         }

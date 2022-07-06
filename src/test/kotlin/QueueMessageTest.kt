@@ -168,8 +168,6 @@ class QueueMessageTest {
         val message = "{\"status\": \"ok\", \"data\": {\"test\": 1}}".toByteArray()
         val result = QueueMessage.unserialize(message)
 
-        println(result.data?.asJsonObject?.get("test"))
-
         val testValue = result.data?.asJsonObject?.get("test")?.asInt
         assertTrue {
             result.status == "ok" && testValue == 1
