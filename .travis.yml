@@ -15,4 +15,4 @@ git:
   depth: false
 
 script:
-  - ./gradlew test jacocoTestReport sonarqube
+  - ./gradlew test jacocoTestReport sonarqube --info

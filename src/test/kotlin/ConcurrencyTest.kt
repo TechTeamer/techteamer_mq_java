@@ -169,13 +169,7 @@ class ConcurrencyTest {
 
             publisher.sendSimpleAction("testAction", "testData", null, null)
 
-            delay(200)
-
-            println(subscriberTwo.actions)
-            println(callOneFinished)
-            println(callTwoFinished)
-            println(callOneStarted)
-            println(callTwoStarted)
+            delay(300)
 
             val diff = abs(callOneStarted?.time!! - callTwoStarted?.time!!)
             println(diff)
