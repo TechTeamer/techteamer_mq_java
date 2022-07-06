@@ -12,43 +12,53 @@ class ConcurrencyTest {
     val rpcName = "techteamer-mq-java-test-rpc-concurrency"
     val rpcClientOptions = RpcClientOptions()
     val rpcServerOptions = RpcServerOptions()
+    val publisherOptions = PublisherOptions()
+    val subscriberOptions = SubscriberOptions()
 
     val queueName = "techteamer-mq-java-test-queue-concurrency"
+    val queueClientOptions = QueueClientOptions()
     val queueServerOptions = QueueServerOptions()
     val connectionOptions = ConnectionOptions()
 
     val exchangeName = "techteamer-mq-java-test-pubsub-concurrency"
     private var rpcServer: RPCServer
     private var rpcClient: RPCClient
-    private lateinit var rpcClientTwo: RPCClient
+    private var rpcClientTwo: RPCClient
     private var queueServer: QueueServer
     private var queueClient: QueueClient
     private var subscriber: Subscriber
-    private lateinit var subscriberTwo: Subscriber
+    private var subscriberTwo: Subscriber
     private var publisher: Publisher
 
     init {
         rpcClientOptions.prefetchCount = 3
         rpcClientOptions.queueMaxSize = 1
         rpcClientOptions.timeOutMs = 15000
-        rpcClient = queueManager.getRPCClient(rpcName, options = rpcClientOptions)
+        rpcClient = queueManager.getRPCClient(rpcName, rpcClientOptions)
         rpcClientTwo = queueManagerTwo.getRPCClient(rpcName, rpcClientOptions)
 
         rpcServerOptions.prefetchCount = 3
         rpcServerOptions.timeOutMs = 10000
         rpcServerOptions.queue.durable = false
         rpcServerOptions.queue.exclusive = true
-        rpcServer = queueManager.getRPCServer(rpcName, options = rpcServerOptions)
+        rpcServer = queueManager.getRPCServer(rpcName, rpcServerOptions)
 
         connectionOptions.prefetchCount = 2
         queueServerOptions.connection = connectionOptions
+        queueServerOptions.queue.exclusive = true
 
-        queueServer = queueManager.getQueueServer(queueName, options = queueServerOptions)
-        queueClient = queueManager.getQueueClient(queueName)
+        queueClientOptions.queue.assert = false
+        queueClient = queueManager.getQueueClient(queueName, queueClientOptions)
+        queueServer = queueManager.getQueueServer(queueName, queueServerOptions)
 
-        publisher = queueManager.getPublisher(exchangeName)
-        subscriber = queueManager.getSubscriber(exchangeName)
-        subscriberTwo = queueManagerTwo.getSubscriber(exchangeName)
+        publisherOptions.exchange.durable = false
+        publisherOptions.exchange.autoDelete = true
+        publisher = queueManager.getPublisher(exchangeName, publisherOptions)
+
+        subscriberOptions.exchange.durable = false
+        subscriberOptions.exchange.autoDelete = true
+        subscriber = queueManager.getSubscriber(exchangeName, subscriberOptions)
+        subscriberTwo = queueManagerTwo.getSubscriber(exchangeName, subscriberOptions)
 
         queueManager.connect()
         queueManagerTwo.connect()
