@@ -16,7 +16,7 @@ class QueueTest {
     val serverManager = QueueManager(testhelper.testConfig)
     val queueName = "techteamer-mq-java-test-queue"
     val maxRetry = 3
-    val timeoutMs = 5000
+    val timeoutMs = 500
     val queueClientOptions = QueueClientOptions()
     val queueServerOptions = QueueServerOptions()
 
@@ -120,7 +120,7 @@ class QueueTest {
 
         queueClient.send("")
         queueServer.logger.debug("SENT")
-        delay((timeoutMs + 1000).toLong()) // allow time for network
+        delay((timeoutMs * 4).toLong()) // allow time for network
         queueServer.logger.debug("WAITED")
         assertTrue { timeoutHandledWell }
 
