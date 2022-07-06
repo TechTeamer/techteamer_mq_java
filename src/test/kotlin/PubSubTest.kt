@@ -63,17 +63,18 @@ class PubSubTest {
 
     @Test
     fun sendToMoreSubscribers() = runBlocking {
-        var testMessageReceivedOne = 0
-        var testMessageReceivedTwo = 0
-        var testMessageValid = 0
+        var testMessageReceivedOne = false
+        var testMessageReceivedTwo = false
+        var testMessageOneValid = false
+        var testMessageTwoValid = false
         val consumerOne : QueueHandler = { data, props, request, delivery -> run {
 
             if (data != null && !data.isJsonPrimitive) return@run
 
             if (data?.asString == ("testData")) {
-                testMessageValid++
+                testMessageOneValid = true
             }
-            testMessageReceivedOne++
+            testMessageReceivedOne = true
         }}
 
         val consumerTwo : QueueHandler = { data, props, request, delivery -> run {
@@ -81,9 +82,9 @@ class PubSubTest {
             if (data != null && !data.isJsonPrimitive) return@run
 
             if (data?.asString == ("testData")) {
-                testMessageValid++
+                testMessageTwoValid = true
             }
-            testMessageReceivedTwo++
+            testMessageReceivedTwo = true
         }}
 
         subscriber.consume(consumerOne)
@@ -93,12 +94,17 @@ class PubSubTest {
 
         delay(timeoutMs.toLong()) // allow time for network
 
-        assertTrue ("Both messages should have arrived: $testMessageReceivedOne != 2") {
-            testMessageReceivedOne == 1
-            testMessageReceivedTwo == 1
+        assertTrue ("Both messages should have arrived: one: $testMessageReceivedOne") {
+            testMessageReceivedOne
         }
-        assertTrue ("Both message should be valid: $testMessageValid != 2") {
-            testMessageValid == 2
+        assertTrue ("Both messages should have arrived: two: $testMessageReceivedTwo") {
+            testMessageReceivedTwo
+        }
+        assertTrue ("Both message should be valid: one: $testMessageOneValid") {
+            testMessageOneValid
+        }
+        assertTrue ("Both message should be valid: two: $testMessageTwoValid") {
+            testMessageTwoValid
         }
     }
 
