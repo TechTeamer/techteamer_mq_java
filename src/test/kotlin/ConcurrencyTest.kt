@@ -2,6 +2,8 @@ import com.facekom.mq_kotlin.*
 import kotlinx.coroutines.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.util.Date
+import kotlin.math.abs
 import kotlin.test.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -67,53 +69,67 @@ class ConcurrencyTest {
     @Test
     fun rpcServerNonBlockingTest() = runBlocking {
         assertTrue {
+            var slowCallStarted: Date? = null
+            var slowCallFinished: Date? = null
+
+            var fastCallStarted: Date? = null
+            val fastCallFinished: Date?
+            var fastCallFinishedTwo: Date? = null
+
             rpcServer.registerAction("testAction") { data, request, response, delivery ->
+                fastCallStarted = Date()
                 return@registerAction null
             }
 
             rpcServer.registerAction("testAction2") { data, request, response, delivery ->
                 runBlocking {
+                    slowCallStarted = Date()
                     Thread.sleep(1000)
+                    rpcClient.callSimpleAction("testAction", "testData", null, null)
+                    fastCallFinishedTwo = Date()
                     return@runBlocking null
                 }
             }
 
-            var slowAnswer: QueueMessage? = null
-            var call2Started = false
+            println("1: $fastCallStarted")
             CoroutineScope(Dispatchers.IO).launch {
-                call2Started = true
-                slowAnswer = rpcClientTwo.callSimpleAction("testAction2", "testData", null, null)
+                rpcClientTwo.callSimpleAction("testAction2", "testData", null, null)
+                slowCallFinished = Date()
             }
 
             Thread.sleep(300)
 
-            assertTrue {
-                call2Started
-            }
+            rpcClient.callSimpleAction("testAction", "testData", null, null)
+            println("2: $fastCallStarted")
+            fastCallFinished = Date()
 
-            val fastAnswer: QueueMessage? = rpcClient.callSimpleAction("testAction", "testData", null, null)
-
-            val fastAnswerFinished = fastAnswer != null && slowAnswer == null
             delay(1500)
-            val bothAnswerFinished = fastAnswer != null && slowAnswer != null
-
-            return@assertTrue fastAnswerFinished && bothAnswerFinished
+            println("3: $fastCallStarted")
+            return@assertTrue slowCallStarted!! < fastCallStarted &&
+                    slowCallFinished!! > fastCallFinished &&
+                    fastCallFinishedTwo!! < slowCallFinished
         }
     }
 
     @Test
     fun queueServerNonBlockingTest() = runBlocking {
         assertTrue {
-            var messageFast: QueueMessage? = null
-            var messageSlow: QueueMessage? = null
+            var fastCallStarted: Date? = null
+            var slowCallStarted: Date? = null
+
+            var fastCallFinished: Date? = null
+            var slowCallFinished: Date? = null
+
             queueServer.registerAction("testAction") { _, _, request, _ ->
-                messageFast = request
+                fastCallStarted = Date()
+                fastCallFinished = Date()
                 return@registerAction
             }
 
             queueServer.registerAction("testAction2") { _, _, request, _ ->
+                slowCallStarted = Date()
                 Thread.sleep(1000)
-                messageSlow = request
+                slowCallFinished = Date()
                 return@registerAction
             }
 
@@ -125,43 +141,51 @@ class ConcurrencyTest {
 
             queueClient.sendSimpleAction("testAction", "testData", null, null)
 
-
-            delay(200)
-            val fastAnswerFinished = messageFast != null && messageSlow == null
-            delay(5000)
-            val bothAnswerFinished = messageFast != null && messageSlow != null
-
-            return@assertTrue fastAnswerFinished && bothAnswerFinished
+            delay(1500)
+            return@assertTrue slowCallStarted!! < fastCallStarted && slowCallFinished!! > fastCallFinished
         }
     }
 
     @Test
     fun pubSubNonBlockingTest() = runBlocking {
         assertTrue {
-            var messageFast: QueueMessage? = null
-            var messageSlow: QueueMessage? = null
+            var callOneStarted: Date? = null
+            var callOneFinished: Date? = null
+            var callTwoStarted: Date? = null
+            var callTwoFinished: Date? = null
+
+            delay(300)
 
             subscriberTwo.registerAction("testAction") { _, _, request, _ ->
-                Thread.sleep(1000)
-                messageSlow = request
+                println("CALLEDTWO")
+                callOneStarted = Date()
+                callOneFinished = Date()
                 return@registerAction
             }
 
             subscriber.registerAction("testAction") { _, _, request, _ ->
-                messageFast = request
+                println("CALLEDONE")
+                callTwoStarted = Date()
+                Thread.sleep(100)
+                callTwoFinished = Date()
                 return@registerAction
             }
 
-            Thread.sleep(300)
 
             publisher.sendSimpleAction("testAction", "testData", null, null)
 
             delay(200)
-            val fastAnswerFinished = messageFast != null && messageSlow == null
-            delay(5000)
-            val bothAnswerFinished = messageFast != null && messageSlow != null
 
-            return@assertTrue fastAnswerFinished && bothAnswerFinished
+            println(subscriberTwo.actions)
+            println(callOneFinished)
+            println(callTwoFinished)
+            println(callOneStarted)
+            println(callTwoStarted)
+
+            val diff = abs(callOneStarted?.time!! - callTwoStarted?.time!!)
+            println(diff)
+
+            return@assertTrue diff < 100 && callOneFinished!! < callTwoFinished
         }
     }
 }

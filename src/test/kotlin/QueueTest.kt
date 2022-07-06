@@ -57,6 +57,7 @@ class QueueTest {
 
     @Test
     fun testQueueStringMessage() = runBlocking {
+        delay(200)
         var testMessageReceived = false
         var testMessageValid = false
 

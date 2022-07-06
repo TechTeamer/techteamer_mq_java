@@ -127,7 +127,7 @@ class RPCTest {
             response: QueueResponse,
             delivery: Delivery
         ): JsonElement? {
-            delay(1000)
+            delay(1500)
             testMessageReceived = true
             return data
         }
