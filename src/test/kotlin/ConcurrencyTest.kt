@@ -91,7 +91,6 @@ class ConcurrencyTest {
                 }
             }
 
-            println("1: $fastCallStarted")
             CoroutineScope(Dispatchers.IO).launch {
                 rpcClientTwo.callSimpleAction("testAction2", "testData", null, null)
                 slowCallFinished = Date()
@@ -100,11 +99,9 @@ class ConcurrencyTest {
             Thread.sleep(300)
 
             rpcClient.callSimpleAction("testAction", "testData", null, null)
-            println("2: $fastCallStarted")
             fastCallFinished = Date()
 
             delay(1500)
-            println("3: $fastCallStarted")
             return@assertTrue slowCallStarted!! < fastCallStarted &&
                     slowCallFinished!! > fastCallFinished &&
                     fastCallFinishedTwo!! < slowCallFinished
@@ -157,14 +154,12 @@ class ConcurrencyTest {
             delay(300)
 
             subscriberTwo.registerAction("testAction") { _, _, request, _ ->
-                println("CALLEDTWO")
                 callOneStarted = Date()
                 callOneFinished = Date()
                 return@registerAction
             }
 
             subscriber.registerAction("testAction") { _, _, request, _ ->
-                println("CALLEDONE")
                 callTwoStarted = Date()
                 Thread.sleep(100)
                 callTwoFinished = Date()
