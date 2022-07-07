@@ -64,6 +64,8 @@ class ConcurrencyTest {
 
         queueManager.connect()
         queueManagerTwo.connect()
+
+        Thread.sleep(500) // connects run in coroutines, so we give some time for them to finish
     }
 
     @Test
@@ -150,8 +152,6 @@ class ConcurrencyTest {
             var callOneFinished: Date? = null
             var callTwoStarted: Date? = null
             var callTwoFinished: Date? = null
-
-            delay(300)
 
             subscriberTwo.registerAction("testAction") { _, _, request, _ ->
                 callOneStarted = Date()

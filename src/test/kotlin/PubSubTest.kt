@@ -35,6 +35,8 @@ class PubSubTest {
         pubManager.connect()
         subManager.connect()
         subManager2.connect()
+
+        Thread.sleep(500) // connects run in coroutines, so we give some time for them to finish
     }
 
     @Test
