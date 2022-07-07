@@ -114,7 +114,10 @@ open class RPCServer(
                 this
             )
 
-            server.mainloop()
+            CoroutineScope(Dispatchers.IO).launch {
+                server.mainloop()
+            }
+
             initialized = true
         } catch (error: Exception) {
             logger.error("CANNOT INITIALIZE RPCServer queue($name) durable($durableQueue) exclusive($exclusiveQueue) autoDelete($autoDeleteQueue) $error")

@@ -42,7 +42,6 @@ class QueueTest {
             serverManager.connect()
             testhelper.logger.debug("CONNECT DONE")
         }
-        Thread.sleep(500) // connects run in coroutines, so we give some time for them to finish
     }
 
     @Test

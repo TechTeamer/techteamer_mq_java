@@ -34,7 +34,6 @@ class RPCTest {
         rpcServer = queueManager.getRPCServer(rpcName, rpcServerOptions)
 
         queueManager.connect()
-        Thread.sleep(500) // connects run in coroutines, so we give some time for them to finish
     }
 
     @Test

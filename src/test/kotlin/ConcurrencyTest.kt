@@ -64,8 +64,6 @@ class ConcurrencyTest {
 
         queueManager.connect()
         queueManagerTwo.connect()
-
-        Thread.sleep(500) // connects run in coroutines, so we give some time for them to finish
     }
 
     @Test
@@ -137,6 +135,7 @@ class ConcurrencyTest {
             }
 
             Thread.sleep(300)
+
 
             queueClient.sendSimpleAction("testAction", "testData", null, null)
 
