@@ -1,1 +1,1 @@
-rootProject.name = "MQ_Kotlin"
+rootProject.name = "FaceKom-mq"

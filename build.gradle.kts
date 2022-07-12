@@ -46,14 +46,13 @@ buildscript {
 
 }
 
-// Empty javadoc
-val javadocJar = tasks.register("javadocJar", Jar::class.java) {
-    archiveClassifier.set("javadoc")
+java {
+    withJavadocJar()
+    withSourcesJar()
 }
 
 val sonatypeUsername: String? = System.getenv("SONATYPE_USERNAME")
 val sonatypePassword: String? = System.getenv("SONATYPE_PASSWORD")
-val sonatypeRepositoryId: String? = System.getenv("SONATYPE_REPOSITORY_ID")
 val artifactName: String = "mq"
 
 publishing {
@@ -61,8 +60,7 @@ publishing {
         repositories {
             maven {
                 name = artifactName
-                val releasesRepoUrl =
-                    uri("https://s01.oss.sonatype.org/service/local/staging/deployByRepositoryId/$sonatypeRepositoryId/")
+                val releasesRepoUrl = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
                 val snapshotsRepoUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
                 url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
                 credentials {
@@ -72,7 +70,6 @@ publishing {
             }
         }
         create<MavenPublication>("maven") {
-            artifact(javadocJar)
             groupId = "com.facekom"
             artifactId = artifactName
             version = "1.0.0"
@@ -99,7 +96,7 @@ publishing {
                 developers {
                     developer {
                         name.set("Zoltan Nagy")
-                        email.set("tunderdomb@facekom.com")
+                        email.set("zoltan.nagy@facekom.com")
                     }
                     developer {
                         name.set("Ferenc Gulyas")
@@ -113,8 +110,8 @@ publishing {
 
 signing {
     useInMemoryPgpKeys(
-        System.getenv("GPG_PRIVATE_KEY"),
         System.getenv("GPG_PRIVATE_KEY_ID"),
+        System.getenv("GPG_PRIVATE_KEY"),
         System.getenv("GPG_PRIVATE_PASSWORD")
     )
     sign(publishing.publications)
