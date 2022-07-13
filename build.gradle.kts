@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "com.facekom"
-version = "1.0.0"
+version = "1.0.1"
 
 repositories {
     mavenCentral()
@@ -34,8 +34,13 @@ tasks.test {
     finalizedBy(tasks.jacocoTestReport)
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+tasks.withType<KotlinCompile>().all {
+    kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8.toString()
+}
+
+tasks.withType<JavaCompile>().all {
+    targetCompatibility = JavaVersion.VERSION_1_8.toString()
+    sourceCompatibility = JavaVersion.VERSION_1_8.toString()
 }
 
 application {
@@ -70,9 +75,9 @@ publishing {
             }
         }
         create<MavenPublication>("maven") {
-            groupId = "com.facekom"
+            groupId = group.toString()
             artifactId = artifactName
-            version = "1.0.0"
+            version = version
 
             from(components["java"])
             pom {
@@ -105,10 +110,27 @@ publishing {
                 }
             }
         }
+        create<MavenPublication>("local") {
+            from(components["java"])
+            groupId = group.toString()
+            artifactId = artifactName
+            version = version
+        }
+    }
+}
+
+tasks.withType<PublishToMavenLocal>().configureEach {
+    onlyIf {
+        (publication == publishing.publications["local"])
     }
 }
 
 signing {
+    setRequired {
+        // signing is required if this is a release version and the artifacts are to be published
+        // do not use hasTask() as this require realization of the tasks that maybe are not necessary
+        gradle.taskGraph.allTasks.any { it is PublishToMavenRepository }
+    }
     useInMemoryPgpKeys(
         System.getenv("GPG_PRIVATE_KEY_ID"),
         System.getenv("GPG_PRIVATE_KEY"),
