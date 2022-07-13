@@ -20,7 +20,7 @@ stages:
   - name: test
     if: branch =~ /(^(main|devel\/.+?)$)|(^(feature|cr|debug|fix|update|upgrade|patch|mod|modification|doc|documentation|test|refact|refactor|improve|improvement)\/[A-Z]+\-\d+(\-.+)?)$/
   - name: release
-    if: branch = main AND tag IS latest
+    if: (branch = main) AND (tag = latest)
 
 jobs:
   include:
@@ -28,7 +28,7 @@ jobs:
       name: code quality # https://docs.travis-ci.com/user/build-matrix/#explicitly-included-jobs-with-only-one-element-in-the-build-matrix
       script:
 #        - ./gradlew test jacocoTestReport sonarqube --info
-        - ./test/scripts/travis.sh
+        - ./src/test/scripts/travis.sh
     - stage: release
       name: publish release
       after_success:
