@@ -4,7 +4,7 @@ dist: focal
 env:
   - TEST_ENV=travis
 
-language: bash
+language: java
 
 cache: false
 git:
@@ -14,12 +14,12 @@ branches:
     - /(^(main|devel\/.+?)$)|(^(feature|cr|debug|fix|update|upgrade|patch|mod|modification|doc|documentation|test|refact|refactor|improve|improvement)\/[A-Z]+\-\d+(\-.+)?)$/
     - latest # latest tag for latest release
 
-#addons:
-#  sonarcloud:
-#    organization: "techteamer"
-#  apt:
-#    packages:
-#      - rabbitmq-server
+addons:
+  sonarcloud:
+    organization: "techteamer"
+  apt:
+    packages:
+      - rabbitmq-server
 stages:
   - test
   - name: release
@@ -30,8 +30,7 @@ jobs:
     - stage: test
       name: code quality # https://docs.travis-ci.com/user/build-matrix/#explicitly-included-jobs-with-only-one-element-in-the-build-matrix
       script:
-        - echo "Testing code quality for $TRAVIS_BRANCH"
-#        - ./gradlew test jacocoTestReport sonarqube --info
+        - ./gradlew test jacocoTestReport sonarqube --info
     - stage: release
       name: publish release
       script:

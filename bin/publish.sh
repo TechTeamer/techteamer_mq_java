@@ -7,12 +7,12 @@
 # in a build for another branch
 if ! (git rev-parse --abbrev-ref HEAD | grep -qxE 'main');
 then
-  echo "Fetching main branch"
+  echo "Fetching main branch (possibly missing due to shallow clone)"
   git fetch origin main:main
 fi
 if ! (git branch --contains "latest" | grep -qxE '. main'); then
   echo "Skipping build: main branch does not contain latest tag"
-  exit 1    # quit the build early
+  exit 1
 fi
 
 SONATYPE_USERNAME=$1
@@ -48,10 +48,10 @@ fi
 
 echo "Releasing latest tag with GPG KEY $GPG_PRIVATE_KEY_ID as $SONATYPE_USERNAME to sonatype"
 
-#export SONATYPE_USERNAME
-#export SONATYPE_PASSWORD
-#export GPG_PRIVATE_KEY
-#export GPG_PRIVATE_KEY_ID
-#export GPG_PRIVATE_PASSWORD
-#
-#./gradlew publishMavenPublicationToMqRepository
+export SONATYPE_USERNAME
+export SONATYPE_PASSWORD
+export GPG_PRIVATE_KEY
+export GPG_PRIVATE_KEY_ID
+export GPG_PRIVATE_PASSWORD
+
+./gradlew publishMavenPublicationToMqRepository
