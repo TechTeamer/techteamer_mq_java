@@ -6,7 +6,10 @@ env:
 
 language: java
 
-cache: false
+cache:
+  directories:
+    - build
+
 git:
   depth: false
 
@@ -28,7 +31,7 @@ jobs:
           packages:
             - rabbitmq-server
       script:
-        - ./gradlew test jacocoTestReport --info
+        - ./gradlew test jacocoTestReport --rerun-tasks --info
     - stage: qa
       name: code quality
       if: branch = main
