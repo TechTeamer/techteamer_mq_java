@@ -35,4 +35,4 @@ jobs:
     - stage: release
       name: publish release
       script:
-        - ./bin/publish.sh $GPG_KEY_ID $GPG_PASSWORD $SONATYPE_USERNAME $SONATYPE_PASSWORD
+        - ./bin/publish.sh $SONATYPE_USERNAME $SONATYPE_PASSWORD $GPG_KEY_ID $GPG_PASSWORD $GPG_KEY

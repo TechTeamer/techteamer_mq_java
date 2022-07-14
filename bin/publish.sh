@@ -15,20 +15,12 @@ if ! (git branch --contains "latest" | grep -qxE '. main'); then
   exit 1    # quit the build early
 fi
 
-GPG_PRIVATE_KEY_ID=$1
-GPG_PRIVATE_PASSWORD=$2
+SONATYPE_USERNAME=$1
+SONATYPE_PASSWORD=$2
+GPG_PRIVATE_KEY_ID=$3
+GPG_PRIVATE_PASSWORD=$4
+GPG_PRIVATE_KEY=$5
 
-SONATYPE_USERNAME=$3
-SONATYPE_PASSWORD=$4
-
-if [[ -z $GPG_PRIVATE_KEY_ID ]]; then
-  echo "Skipping publish: no GPG KEY ID provided"
-  exit 1
-fi
-if [[ -z $GPG_PRIVATE_PASSWORD ]]; then
-  echo "Skipping publish: no GPG KEY PASS provided"
-  exit 1
-fi
 if [[ -z $SONATYPE_USERNAME ]]; then
   echo "Skipping publish: no sonatype username provided"
   exit 1
@@ -37,19 +29,29 @@ if [[ -z $SONATYPE_PASSWORD ]]; then
   echo "Skipping publish: no sonatype password provided"
   exit 1
 fi
-
-GPG_PRIVATE_KEY=$(echo "$GPG_PRIVATE_PASSWORD" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback --export-secret-key --armor "${GPG_PRIVATE_KEY_ID}!")
-if [[ -z $GPG_PRIVATE_KEY ]]; then
-  echo "Skipping publish: no GPG KEY found"
+if [[ -z $GPG_PRIVATE_KEY_ID ]]; then
+  echo "Skipping publish: no GPG KEY ID provided"
   exit 1
+fi
+if [[ -z $GPG_PRIVATE_PASSWORD ]]; then
+  echo "Skipping publish: no GPG KEY PASS provided"
+  exit 1
+fi
+if [[ -z $GPG_PRIVATE_KEY ]]; then
+  echo "Attempting to load local GPG KEY by KEY ID"
+  GPG_PRIVATE_KEY=$(echo "$GPG_PRIVATE_PASSWORD" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback --export-secret-key --armor "${GPG_PRIVATE_KEY_ID}!")
+  if [[ -z $GPG_PRIVATE_KEY ]]; then
+    echo "Skipping publish: no GPG KEY found"
+    exit 1
+  fi
 fi
 
 echo "Releasing latest tag with GPG KEY $GPG_PRIVATE_KEY_ID as $SONATYPE_USERNAME to sonatype"
 
-export SONATYPE_USERNAME
-export SONATYPE_PASSWORD
-export GPG_PRIVATE_KEY
-export GPG_PRIVATE_KEY_ID
-export GPG_PRIVATE_PASSWORD
-
-./gradlew publishMavenPublicationToMqRepository
+#export SONATYPE_USERNAME
+#export SONATYPE_PASSWORD
+#export GPG_PRIVATE_KEY
+#export GPG_PRIVATE_KEY_ID
+#export GPG_PRIVATE_PASSWORD
+#
+#./gradlew publishMavenPublicationToMqRepository
