@@ -9,17 +9,7 @@ language: java
 cache: false
 git:
   depth: false
-branches:
-  only:
-    - /(^(main|devel\/.+?)$)|(^(feature|cr|debug|fix|update|upgrade|patch|mod|modification|doc|documentation|test|refact|refactor|improve|improvement)\/[A-Z]+\-\d+(\-.+)?)$/
-    - latest # latest tag for latest release
 
-addons:
-  sonarcloud:
-    organization: "techteamer"
-  apt:
-    packages:
-      - rabbitmq-server
 stages:
   - test
   - qa
@@ -30,14 +20,25 @@ jobs:
   include:
     - stage: test
       name: unit tests # https://docs.travis-ci.com/user/build-matrix/#explicitly-included-jobs-with-only-one-element-in-the-build-matrix
+      if: |
+        branch =~ /(^(main|devel\/.+?)$)|(^(feature|cr|debug|fix|update|upgrade|patch|mod|modification|doc|documentation|test|refact|refactor|improve|improvement)\/[A-Z]+\-\d+(\-.+)?)$/ OR \
+        tag = latest
+      addons:
+        apt:
+          packages:
+            - rabbitmq-server
       script:
         - ./gradlew test jacocoTestReport --info
     - stage: qa
       name: code quality
       if: branch = main
+      addons:
+        sonarcloud:
+          organization: "techteamer"
       script:
         - ./gradlew sonarqube --info
     - stage: release
       name: publish release
+      if: tag = latest
       script:
         - ./bin/publish.sh $SONATYPE_USERNAME $SONATYPE_PASSWORD $GPG_KEY_ID $GPG_PASSWORD $GPG_KEY
