@@ -12,7 +12,7 @@ git:
 branches:
   only:
     - /(^(main|devel\/.+?)$)|(^(feature|cr|debug|fix|update|upgrade|patch|mod|modification|doc|documentation|test|refact|refactor|improve|improvement)\/[A-Z]+\-\d+(\-.+)?)$/
-    - /^(latest|\d+\.\d+\.\d+)$/
+    - latest # latest tag for latest release
 
 #addons:
 #  sonarcloud:
