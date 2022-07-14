@@ -11,20 +11,18 @@ if ! (git branch --contains "latest" | grep -qxE '. main'); then
   exit 1    # quit the build early
 fi
 
+GPG_PRIVATE_KEY_ID=$1
+GPG_PRIVATE_PASSWORD=$2
+#GPG_PRIVATE_KEY=$(echo "$GPG_PRIVATE_PASSWORD" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback --export-secret-key --armor "${GPG_PRIVATE_KEY_ID}!")
+SONATYPE_USERNAME=$3
+SONATYPE_PASSWORD=$4
+
 echo "Releasing latest tag with GPG KEY $GPG_PRIVATE_KEY_ID as $SONATYPE_USERNAME to sonatype"
 
-#GPG_PRIVATE_KEY_ID=$1
-#GPG_PRIVATE_PASSWORD=$2
-#GPG_PRIVATE_KEY=$(echo "$GPG_PRIVATE_PASSWORD" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback --export-secret-key --armor "${GPG_PRIVATE_KEY_ID}!")
-#
+#export SONATYPE_USERNAME
+#export SONATYPE_PASSWORD
 #export GPG_PRIVATE_KEY
 #export GPG_PRIVATE_KEY_ID
 #export GPG_PRIVATE_PASSWORD
-#
-#SONATYPE_USERNAME=$3
-#SONATYPE_PASSWORD=$4
-#
-#export SONATYPE_USERNAME
-#export SONATYPE_PASSWORD
 #
 #./gradlew publishMavenPublicationToMqRepository
