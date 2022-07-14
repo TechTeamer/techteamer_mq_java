@@ -6,6 +6,7 @@ if ! (git rev-parse --abbrev-ref HEAD | grep -qxE 'main'); then
 fi
 
 VERSION_TAG=$1
+FORCE_RE_TAG=$2
 
 if [[ -z $VERSION_TAG ]]; then
   echo "Skipping release: no version tag provided"
@@ -13,8 +14,10 @@ if [[ -z $VERSION_TAG ]]; then
 fi
 
 if (git branch --contains "$VERSION_TAG" | grep -qxE '. main'); then
-  echo "Skipping release: main branch already tagged: $VERSION_TAG"
-  exit 1
+  if [ "$FORCE_RE_TAG" != "--force" ]; then
+    echo "Skipping release: main branch already tagged: $VERSION_TAG"
+    exit 1
+  fi
 fi
 
 echo "Tagging main branch: $VERSION_TAG"

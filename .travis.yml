@@ -32,8 +32,7 @@ jobs:
       script:
         - echo "Testing code quality for $TRAVIS_BRANCH"
 #        - ./gradlew test jacocoTestReport sonarqube --info
-#        - ./src/test/scripts/travis.sh
     - stage: release
       name: publish release
       script:
-        - ./publish.sh $GPG_KEY_ID $GPG_PASSWORD $SONATYPE_USERNAME $SONATYPE_PASSWORD
+        - ./bin/publish.sh $GPG_KEY_ID $GPG_PASSWORD $SONATYPE_USERNAME $SONATYPE_PASSWORD
