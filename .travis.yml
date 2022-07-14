@@ -9,6 +9,10 @@ language: java
 cache: false
 git:
   depth: false
+branches:
+  only:
+    - /(^(main|devel\/.+?)$)|(^(feature|cr|debug|fix|update|upgrade|patch|mod|modification|doc|documentation|test|refact|refactor|improve|improvement)\/[A-Z]+\-\d+(\-.+)?)$/
+    - /^(latest|\d+\.\d+\.\d+)$/
 
 addons:
   sonarcloud:
@@ -17,20 +21,22 @@ addons:
     packages:
       - rabbitmq-server
 stages:
-  - name: test
-    if: branch =~ /(^(main|devel\/.+?)$)|(^(feature|cr|debug|fix|update|upgrade|patch|mod|modification|doc|documentation|test|refact|refactor|improve|improvement)\/[A-Z]+\-\d+(\-.+)?)$/
+  - test
   - name: release
     if: tag = latest
+
+before_install:
+  - echo hello $TRAVIS_TAG $GPG_KEY_ID
 
 jobs:
   include:
     - stage: test
       name: code quality # https://docs.travis-ci.com/user/build-matrix/#explicitly-included-jobs-with-only-one-element-in-the-build-matrix
       script:
+        - echo "Testing code quality for $TRAVIS_BRANCH"
 #        - ./gradlew test jacocoTestReport sonarqube --info
 #        - ./src/test/scripts/travis.sh
-        - echo hello test $TRAVIS_BRANCH $TRAVIS_TAG
     - stage: release
       name: publish release
       after_success:
-        - echo hello $TRAVIS_TAG
+        - ./publish.sh $GPG_KEY_ID $GPG_PASSWORD $SONATYPE_USERNAME $SONATYPE_PASSWORD
