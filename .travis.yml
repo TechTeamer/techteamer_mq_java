@@ -11,9 +11,18 @@ cache: false
 git:
   depth: false
 
+addons:
+  apt:
+    packages:
+      - rabbitmq-server
+  sonarcloud:
+    organization: "techteamer"
+
 stages:
-  - test
-  - qa
+  - name: test
+    if: |
+      branch =~ /(^(main|devel\/.+?)$)|(^(feature|cr|debug|fix|update|upgrade|patch|mod|modification|doc|documentation|test|refact|refactor|improve|improvement)\/[A-Z]+\-\d+(\-.+)?)$/ OR \
+      tag = latest
   - name: release
     if: tag = latest
 
@@ -21,15 +30,6 @@ jobs:
   include:
     - stage: test
       name: unit tests and code quality # https://docs.travis-ci.com/user/build-matrix/#explicitly-included-jobs-with-only-one-element-in-the-build-matrix
-      if: |
-        branch =~ /(^(main|devel\/.+?)$)|(^(feature|cr|debug|fix|update|upgrade|patch|mod|modification|doc|documentation|test|refact|refactor|improve|improvement)\/[A-Z]+\-\d+(\-.+)?)$/ OR \
-        tag = latest
-      addons:
-        apt:
-          packages:
-            - rabbitmq-server
-        sonarcloud:
-          organization: "techteamer"
       script:
         - ./gradlew test jacocoTestReport sonarqube --info
     - stage: release
