@@ -20,7 +20,7 @@ stages:
   - name: test
     if: branch =~ /(^(main|devel\/.+?)$)|(^(feature|cr|debug|fix|update|upgrade|patch|mod|modification|doc|documentation|test|refact|refactor|improve|improvement)\/[A-Z]+\-\d+(\-.+)?)$/
   - name: release
-    if: (branch = main) AND (tag = latest)
+    if: tag = latest
 
 jobs:
   include:
