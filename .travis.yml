@@ -14,19 +14,16 @@ branches:
     - /(^(main|devel\/.+?)$)|(^(feature|cr|debug|fix|update|upgrade|patch|mod|modification|doc|documentation|test|refact|refactor|improve|improvement)\/[A-Z]+\-\d+(\-.+)?)$/
     - /^(latest|\d+\.\d+\.\d+)$/
 
-addons:
-  sonarcloud:
-    organization: "techteamer"
-  apt:
-    packages:
-      - rabbitmq-server
+#addons:
+#  sonarcloud:
+#    organization: "techteamer"
+#  apt:
+#    packages:
+#      - rabbitmq-server
 stages:
   - test
   - name: release
     if: tag = latest
-
-before_install:
-  - echo hello $TRAVIS_TAG $GPG_KEY_ID
 
 jobs:
   include:
@@ -38,5 +35,5 @@ jobs:
 #        - ./src/test/scripts/travis.sh
     - stage: release
       name: publish release
-      after_success:
+      script:
         - ./publish.sh $GPG_KEY_ID $GPG_PASSWORD $SONATYPE_USERNAME $SONATYPE_PASSWORD
