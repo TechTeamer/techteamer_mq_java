@@ -29,7 +29,7 @@ jobs:
       script:
 #        - ./gradlew test jacocoTestReport sonarqube --info
 #        - ./src/test/scripts/travis.sh
-        - echo hello test
+        - echo hello test $TRAVIS_BRANCH $TRAVIS_TAG
     - stage: release
       name: publish release
       after_success:
