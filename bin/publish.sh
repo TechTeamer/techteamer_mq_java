@@ -54,4 +54,4 @@ export GPG_PRIVATE_KEY
 export GPG_PRIVATE_KEY_ID
 export GPG_PRIVATE_PASSWORD
 
-./gradlew publishMavenPublicationToMqRepository
+./gradlew publishMavenPublicationToMqRepository --info

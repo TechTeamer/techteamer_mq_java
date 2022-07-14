@@ -22,15 +22,21 @@ addons:
       - rabbitmq-server
 stages:
   - test
+  - qa
   - name: release
     if: tag = latest
 
 jobs:
   include:
     - stage: test
-      name: code quality # https://docs.travis-ci.com/user/build-matrix/#explicitly-included-jobs-with-only-one-element-in-the-build-matrix
+      name: unit tests # https://docs.travis-ci.com/user/build-matrix/#explicitly-included-jobs-with-only-one-element-in-the-build-matrix
       script:
-        - ./gradlew test jacocoTestReport sonarqube --info
+        - ./gradlew test jacocoTestReport --info
+    - stage: qa
+      name: code quality
+      if: branch = main
+      script:
+        - ./gradlew sonarqube --info
     - stage: release
       name: publish release
       script:
