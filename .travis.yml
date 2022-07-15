@@ -6,7 +6,14 @@ env:
 
 language: java
 
-cache: false
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+  timeout: 300 # store cache for 5 minutes so deployment builds triggered by git tags will have test results cached from a potential previous build
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
 
 git:
   depth: false
@@ -20,19 +27,21 @@ addons:
 
 stages:
   - name: test
+    # run tests on tagged release to prevent publishing failed build
     if: |
       branch =~ /(^(main|devel\/.+?)$)|(^(feature|cr|debug|fix|update|upgrade|patch|mod|modification|doc|documentation|test|refact|refactor|improve|improvement)\/[A-Z]+\-\d+(\-.+)?)$/ OR \
       tag = latest
+   # run deployment only on tagged releases
   - name: release
     if: tag = latest
 
 jobs:
   include:
     - stage: test
-      name: unit tests and code quality # https://docs.travis-ci.com/user/build-matrix/#explicitly-included-jobs-with-only-one-element-in-the-build-matrix
+      name: unit tests and code quality # build matrix craziness https://docs.travis-ci.com/user/build-matrix/#explicitly-included-jobs-with-only-one-element-in-the-build-matrix
       script:
         - ./gradlew test jacocoTestReport sonarqube --info
     - stage: release
       name: publish release
       script:
-        - ./bin/publish.sh $SONATYPE_USERNAME $SONATYPE_PASSWORD $GPG_KEY_ID $GPG_PASSWORD $GPG_KEY
+        - ./bin/publish.sh $SONATYPE_USERNAME $SONATYPE_PASSWORD $GPG_KEY_ID $GPG_KEY_PASS $GPG_KEY_ENC_PASS
