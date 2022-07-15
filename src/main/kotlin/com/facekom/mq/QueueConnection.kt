@@ -1,4 +1,4 @@
-package com.facekom.mq_kotlin
+package com.facekom.mq
 
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Connection

@@ -1,4 +1,4 @@
-import com.facekom.mq_kotlin.QueueMessage
+import com.facekom.mq.QueueMessage
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.*

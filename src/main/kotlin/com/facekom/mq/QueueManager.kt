@@ -1,4 +1,4 @@
-package com.facekom.mq_kotlin
+package com.facekom.mq
 
 import kotlinx.coroutines.*
 import org.slf4j.Logger

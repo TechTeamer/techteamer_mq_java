@@ -1,4 +1,4 @@
-import com.facekom.mq_kotlin.*
+import com.facekom.mq.*
 import kotlinx.coroutines.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance

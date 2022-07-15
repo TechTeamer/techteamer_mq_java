@@ -1,4 +1,4 @@
-package com.facekom.mq_kotlin
+package com.facekom.mq
 
 import com.google.gson.*
 import java.math.BigInteger

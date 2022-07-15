@@ -1,4 +1,4 @@
-import com.facekom.mq_kotlin.*
+import com.facekom.mq.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test

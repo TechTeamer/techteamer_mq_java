@@ -1,4 +1,4 @@
-import com.facekom.mq_kotlin.*
+import com.facekom.mq.*
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import com.rabbitmq.client.Delivery

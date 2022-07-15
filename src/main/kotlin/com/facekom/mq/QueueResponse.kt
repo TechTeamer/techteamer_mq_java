@@ -1,4 +1,4 @@
-package com.facekom.mq_kotlin
+package com.facekom.mq
 
 class QueueResponse(
     var statusMessage: String? = "",

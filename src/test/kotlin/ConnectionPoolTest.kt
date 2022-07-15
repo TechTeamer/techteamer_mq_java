@@ -1,7 +1,7 @@
-import com.facekom.mq_kotlin.ConnectionPool
-import com.facekom.mq_kotlin.ConnectionPoolConfig
-import com.facekom.mq_kotlin.QueueConfig
-import com.facekom.mq_kotlin.QueueManager
+import com.facekom.mq.ConnectionPool
+import com.facekom.mq.ConnectionPoolConfig
+import com.facekom.mq.QueueConfig
+import com.facekom.mq.QueueManager
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.*

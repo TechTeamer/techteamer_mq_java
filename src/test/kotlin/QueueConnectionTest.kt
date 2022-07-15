@@ -1,5 +1,5 @@
-import com.facekom.mq_kotlin.QueueConfig
-import com.facekom.mq_kotlin.QueueConnection
+import com.facekom.mq.QueueConfig
+import com.facekom.mq.QueueConnection
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.*

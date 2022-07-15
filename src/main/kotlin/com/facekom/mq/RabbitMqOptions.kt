@@ -1,4 +1,4 @@
-package com.facekom.mq_kotlin
+package com.facekom.mq
 
 import java.io.FileInputStream
 import java.security.KeyStore

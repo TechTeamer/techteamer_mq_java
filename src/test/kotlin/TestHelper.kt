@@ -1,6 +1,6 @@
-import com.facekom.mq_kotlin.QueueConfig
-import com.facekom.mq_kotlin.QueueMessage
-import com.facekom.mq_kotlin.RabbitMqOptions
+import com.facekom.mq.QueueConfig
+import com.facekom.mq.QueueMessage
+import com.facekom.mq.RabbitMqOptions
 import com.google.gson.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
