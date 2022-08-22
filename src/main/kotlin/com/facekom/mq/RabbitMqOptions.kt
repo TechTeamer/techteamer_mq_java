@@ -11,6 +11,9 @@ class RabbitMqOptions {
     var trust: String? = null
     var trustPwd: String? = null
     var keyPwd: String? = null
+    var userName: String? = "nyilvantarto"
+    var password: String? = "nyilvantarto"
+    var vhost: String? = "nyilvantarto"
 
     fun key (value: String): RabbitMqOptions {
         key = value

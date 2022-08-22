@@ -4,14 +4,26 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class QueueConfig {
-    var url: String = "amqps://localhost:5672"
+    var protocol: String = "amqps"
+    var hostname = "rabbitmq_services"
+    var port = 5671
     var options: RabbitMqOptions = RabbitMqOptions()
     var logger: Logger = LoggerFactory.getLogger("mq")
     var rpcTimeoutMs: Int = 10000
     var rpcQueueMaxSize: Int = 100
 
-    fun url (value: String): QueueConfig {
-        url = value
+    fun hostname (value: String): QueueConfig {
+        hostname = value
+        return this
+    }
+
+    fun protocol (value: String): QueueConfig {
+        protocol = value
+        return this
+    }
+
+    fun port (value: Int): QueueConfig {
+        port = value
         return this
     }
 
@@ -36,7 +48,7 @@ class QueueConfig {
     }
 
     fun isValid () :Boolean {
-        if (url == "") return false
+        if (hostname == "" || protocol == "") return false
         if (!options.isValid()) return false
         return true
     }
