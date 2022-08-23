@@ -29,7 +29,6 @@ class QueueConnection(private val config: QueueConfig) {
                 ?: throw Exception("Cannot identify the proper protocol from url.")
 
             val (protocol) = match.destructured
-            println(protocol)
 
             if (protocol == "amqps") {
                 val sslContext = config.options.getSSLContext()
