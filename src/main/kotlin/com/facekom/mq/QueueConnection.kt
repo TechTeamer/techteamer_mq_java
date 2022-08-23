@@ -20,19 +20,32 @@ class QueueConnection(private val config: QueueConfig) {
 
     fun connect() {
         if (connected) {
-            logger.info("RabbitMq connection already established to ${config.url}")
+            logger.info("RabbitMq connection already established to ${config.hostname ?: config.url}")
             return
         }
 
-        val sslContext = config.options.getSSLContext()
-        if (sslContext != null) {
+        if (config.protocol == "amqps") {
+            val sslContext = config.options.getSSLContext()
             factory.useSslProtocol(sslContext)
         }
 
-        factory.setUri(config.url)
-        connection = factory.newConnection(config.url)
+        if (config.options.userName != null && config.options.password != null) {
+            factory.username = config.options.userName
+            factory.password = config.options.password
+        }
+
+        if (config.hostname == null && config.port == null) {
+            factory.setUri(config.url)
+        } else {
+            factory.host = config.hostname
+            factory.port = config.port!!
+        }
+
+        factory.virtualHost = config.options.vhost ?: ConnectionFactory.DEFAULT_VHOST
+
+        connection = factory.newConnection()
         connected = true
-        logger.info("RabbitMq connection established to ${config.url}")
+        logger.info("RabbitMq connection established to ${config.hostname ?: config.url}")
     }
 
 }

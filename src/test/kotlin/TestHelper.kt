@@ -1,3 +1,4 @@
+import com.facekom.mq.ConnectionProtocol
 import com.facekom.mq.QueueConfig
 import com.facekom.mq.QueueMessage
 import com.facekom.mq.RabbitMqOptions
@@ -10,13 +11,7 @@ class TestHelper {
     val logger: Logger = LoggerFactory.getLogger("brandNewTestLogger")
 
     var testConfig = QueueConfig()
-        .url("amqps://guest:guest@localhost:5671")
-        .options(RabbitMqOptions()
-            .key("/workspace/vuer_docker/workspace/cert/vuer_mq_cert/client/keycert.p12")
-            .trust("/workspace/vuer_docker/workspace/cert/vuer_mq_cert/rabbitstore")
-            .trustPwd("asdf1234")
-            .keyPwd("MySecretPassword")
-        )
+
     val messageOK = { data: JsonElement -> QueueMessage("ok", data) }
     val messageErr = { data: JsonElement -> QueueMessage("error", data) }
 
@@ -33,40 +28,57 @@ class TestHelper {
     val arrayData = JsonArray()
     val nullData = JsonNull.INSTANCE
 
-    var compatStringMessage : ByteArray
-    var compatNumberMessage : ByteArray
-    var compatBooleanMessage : ByteArray
-    var compatObjectMessage : ByteArray
-    var compatArrayMessage : ByteArray
-    var compatNullMessage : ByteArray
+    var compatStringMessage: ByteArray
+    var compatNumberMessage: ByteArray
+    var compatBooleanMessage: ByteArray
+    var compatObjectMessage: ByteArray
+    var compatArrayMessage: ByteArray
+    var compatNullMessage: ByteArray
 
-    val jsonStringMessage : String = "{\"status\": \"ok\",\"data\":\"test\"}"
-    val jsonNumberMessage : String = "{\"status\": \"ok\",\"data\":1}"
-    val jsonBooleanMessage : String = "{\"status\": \"ok\",\"data\":true}"
-    val jsonObjectMessage : String = "{\"status\": \"ok\",\"data\":{\"string\":\"test\",\"number\":1,\"array\":[1,\"testString\"]}}"
-    val jsonArrayMessage : String = "{\"status\": \"ok\",\"data\":[1,\"testString\",{\"nested\":\"string\"}]}"
-    val jsonNullMessage : String = "{\"status\": \"ok\",\"data\":null}"
+    val jsonStringMessage: String = "{\"status\": \"ok\",\"data\":\"test\"}"
+    val jsonNumberMessage: String = "{\"status\": \"ok\",\"data\":1}"
+    val jsonBooleanMessage: String = "{\"status\": \"ok\",\"data\":true}"
+    val jsonObjectMessage: String =
+        "{\"status\": \"ok\",\"data\":{\"string\":\"test\",\"number\":1,\"array\":[1,\"testString\"]}}"
+    val jsonArrayMessage: String = "{\"status\": \"ok\",\"data\":[1,\"testString\",{\"nested\":\"string\"}]}"
+    val jsonNullMessage: String = "{\"status\": \"ok\",\"data\":null}"
 
     init {
-        if (System.getenv("TEST_ENV") == "travis" ) {
-            testConfig = QueueConfig()
-                .url("amqp://guest:guest@localhost:5672")
+        if (System.getenv("TEST_ENV") == "travis") {
+            testConfig.url("amqp://guest:guest@localhost:5672")
+        } else {
+            testConfig.hostname("rabbitmq_services")
+                .port(5671)
+                .protocol(ConnectionProtocol.AMQPS)
+                .options(
+                    RabbitMqOptions()
+                        .vhost("nyilvantarto")
+                        .password("nyilvantarto")
+                        .userName("nyilvantarto")
+                        .allowTlsWithoutTrustStore(true)
+                )
         }
 
         val base64Decoder = Base64.getDecoder()
 
         // node > new QueueMessage('ok', 'test', 0).serialize().toString('base64')
-        compatStringMessage = base64Decoder.decode("KwAAADp7InN0YXR1cyI6Im9rIiwiZGF0YSI6InRlc3QiLCJ0aW1lT3V0IjowLCJhdHRhY2hBcnJheSI6W119")
+        compatStringMessage =
+            base64Decoder.decode("KwAAADp7InN0YXR1cyI6Im9rIiwiZGF0YSI6InRlc3QiLCJ0aW1lT3V0IjowLCJhdHRhY2hBcnJheSI6W119")
         // node > new QueueMessage('ok', 1, 0).serialize().toString('base64')
-        compatNumberMessage = base64Decoder.decode("KwAAADV7InN0YXR1cyI6Im9rIiwiZGF0YSI6MSwidGltZU91dCI6MCwiYXR0YWNoQXJyYXkiOltdfQ==")
+        compatNumberMessage =
+            base64Decoder.decode("KwAAADV7InN0YXR1cyI6Im9rIiwiZGF0YSI6MSwidGltZU91dCI6MCwiYXR0YWNoQXJyYXkiOltdfQ==")
         // node > new QueueMessage('ok', true, 0).serialize().toString('base64')
-        compatBooleanMessage = base64Decoder.decode("KwAAADh7InN0YXR1cyI6Im9rIiwiZGF0YSI6dHJ1ZSwidGltZU91dCI6MCwiYXR0YWNoQXJyYXkiOltdfQ==")
+        compatBooleanMessage =
+            base64Decoder.decode("KwAAADh7InN0YXR1cyI6Im9rIiwiZGF0YSI6dHJ1ZSwidGltZU91dCI6MCwiYXR0YWNoQXJyYXkiOltdfQ==")
         // node > new QueueMessage('ok', { string: 'test', number: 1, array: [1, 'testString']}, 0).serialize().toString('base64')
-        compatObjectMessage = base64Decoder.decode("KwAAAGl7InN0YXR1cyI6Im9rIiwiZGF0YSI6eyJzdHJpbmciOiJ0ZXN0IiwibnVtYmVyIjoxLCJhcnJheSI6WzEsInRlc3RTdHJpbmciXX0sInRpbWVPdXQiOjAsImF0dGFjaEFycmF5IjpbXX0=")
+        compatObjectMessage =
+            base64Decoder.decode("KwAAAGl7InN0YXR1cyI6Im9rIiwiZGF0YSI6eyJzdHJpbmciOiJ0ZXN0IiwibnVtYmVyIjoxLCJhcnJheSI6WzEsInRlc3RTdHJpbmciXX0sInRpbWVPdXQiOjAsImF0dGFjaEFycmF5IjpbXX0=")
         // node > new QueueMessage('ok', [1, 'testString', { nested: 'string' }], 0).serialize().toString('base64')
-        compatArrayMessage = base64Decoder.decode("KwAAAFh7InN0YXR1cyI6Im9rIiwiZGF0YSI6WzEsInRlc3RTdHJpbmciLHsibmVzdGVkIjoic3RyaW5nIn1dLCJ0aW1lT3V0IjowLCJhdHRhY2hBcnJheSI6W119")
+        compatArrayMessage =
+            base64Decoder.decode("KwAAAFh7InN0YXR1cyI6Im9rIiwiZGF0YSI6WzEsInRlc3RTdHJpbmciLHsibmVzdGVkIjoic3RyaW5nIn1dLCJ0aW1lT3V0IjowLCJhdHRhY2hBcnJheSI6W119")
         // node > new QueueMessage('ok', null, 0).serialize().toString('base64')
-        compatNullMessage = base64Decoder.decode("KwAAADh7InN0YXR1cyI6Im9rIiwiZGF0YSI6bnVsbCwidGltZU91dCI6MCwiYXR0YWNoQXJyYXkiOltdfQ==")
+        compatNullMessage =
+            base64Decoder.decode("KwAAADh7InN0YXR1cyI6Im9rIiwiZGF0YSI6bnVsbCwidGltZU91dCI6MCwiYXR0YWNoQXJyYXkiOltdfQ==")
 
         // [1, 'testString', { nested: 'string' }]
         arrayData.add(1)
@@ -84,7 +96,7 @@ class TestHelper {
         objectData.add("array", arrayForObject)
     }
 
-    fun checkData (data: JsonElement?, expected: JsonElement) : String? {
+    fun checkData(data: JsonElement?, expected: JsonElement): String? {
         if (expected.isJsonNull && data == null) return null // that's ok
         if (data == null) return "should not be null"
 
