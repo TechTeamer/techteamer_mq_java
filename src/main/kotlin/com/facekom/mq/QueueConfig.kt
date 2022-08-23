@@ -4,7 +4,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class QueueConfig {
-    var url: String = "amqp://localhost:5672"
+    var url: String? = null
     var protocol: String = ConnectionProtocol.AMQP.protocol
     var hostname: String? = null
     var port: Int? = null
