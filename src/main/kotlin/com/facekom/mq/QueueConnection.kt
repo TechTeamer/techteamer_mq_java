@@ -24,24 +24,32 @@ class QueueConnection(private val config: QueueConfig) {
             return
         }
 
-        if (config.protocol == "amqps") {
-            val sslContext = config.options.getSSLContext()
-            factory.useSslProtocol(sslContext)
-        }
+        if (config.url != null) {
+            val match = "(^amqps?):.*".toRegex().find(config.url!!)
+                ?: throw Exception("Cannot identify the proper protocol from url.")
 
-        if (config.options.userName != null && config.options.password != null) {
-            factory.username = config.options.userName
-            factory.password = config.options.password
-        }
+            val (protocol) = match.destructured
+            println(protocol)
 
-        if (config.hostname == null && config.port == null) {
+            if (protocol == "amqps") {
+                val sslContext = config.options.getSSLContext()
+                factory.useSslProtocol(sslContext)
+            }
             factory.setUri(config.url)
         } else {
-            factory.host = config.hostname
-            factory.port = config.port!!
-        }
+            factory.host = config.hostname ?: ConnectionFactory.DEFAULT_HOST
+            factory.port = config.port ?: ConnectionFactory.DEFAULT_AMQP_PORT
+            factory.virtualHost = config.options.vhost ?: ConnectionFactory.DEFAULT_VHOST
 
-        factory.virtualHost = config.options.vhost ?: ConnectionFactory.DEFAULT_VHOST
+            if (config.protocol == "amqps") {
+                val sslContext = config.options.getSSLContext()
+                factory.useSslProtocol(sslContext)
+            }
+            if (config.options.userName != null && config.options.password != null) {
+                factory.username = config.options.userName
+                factory.password = config.options.password
+            }
+        }
 
         connection = factory.newConnection()
         connected = true

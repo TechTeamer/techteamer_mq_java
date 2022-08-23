@@ -52,9 +52,9 @@ class TestHelper {
                 .protocol(ConnectionProtocol.AMQPS)
                 .options(
                     RabbitMqOptions()
-                        .vhost("nyilvantarto")
-                        .password("nyilvantarto")
-                        .userName("nyilvantarto")
+                        .vhost("pdfservice")
+                        .password("pdfservice")
+                        .userName("pdfservice")
                         .allowTlsWithoutTrustStore(true)
                 )
         }
