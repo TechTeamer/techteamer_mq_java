@@ -69,7 +69,7 @@ class RabbitMqOptions {
         return this
     }
 
-    fun getSSLContext(): SSLContext? {
+    fun getSSLContext(): SSLContext {
         val context = SSLContext.getInstance("TLSv1.3")
         var keyMngF: KeyManagerFactory? = null
         var tmf: TrustManagerFactory? = null
