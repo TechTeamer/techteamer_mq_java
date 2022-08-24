@@ -4,6 +4,15 @@ SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 
 # ./bin/publish.sh <sonatype_username> <sonatype_pass> 82AC9F59 <gpg_key_pass> <gpg_key_enc_pass>
 
+function help () {
+  echo "publish <sonatype_username> <sonatype_pass> 82AC9F59 <gpg_key_pass> <gpg_key_enc_pass>"
+}
+
+if [[ -z $1 || $1 == "--help" || $1 == "help" ]]; then
+  help
+  exit 1
+fi
+
 # Travis does a shallow clone by default
 # so `master` is not present in the local metadata
 # in a build for another branch
@@ -14,6 +23,7 @@ then
 fi
 if ! (git branch --contains "latest" | grep -qxE '. main'); then
   echo "Skipping build: main branch does not contain latest tag"
+  help
   exit 1
 fi
 
@@ -26,18 +36,22 @@ GPG_PRIVATE_KEY=$6
 
 if [[ -z $SONATYPE_USERNAME ]]; then
   echo "Skipping publish: no sonatype username provided"
+  help
   exit 1
 fi
 if [[ -z $SONATYPE_PASSWORD ]]; then
   echo "Skipping publish: no sonatype password provided"
+  help
   exit 1
 fi
 if [[ -z $GPG_PRIVATE_KEY_ID ]]; then
   echo "Skipping publish: no GPG KEY ID provided"
+  help
   exit 1
 fi
 if [[ -z $GPG_PRIVATE_PASSWORD ]]; then
   echo "Skipping publish: no GPG KEY PASS provided"
+  help
   exit 1
 fi
 if [[ -z $GPG_PRIVATE_KEY ]]; then
@@ -54,6 +68,7 @@ if [[ -z $GPG_PRIVATE_KEY ]]; then
 fi
 if [[ -z $GPG_PRIVATE_KEY ]]; then
   echo "Skipping publish: no GPG KEY found"
+  help
   exit 1
 fi
 
