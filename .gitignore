@@ -30,3 +30,4 @@ out/
 build
 *.pfx
 .DS_Store
+*.gpg
