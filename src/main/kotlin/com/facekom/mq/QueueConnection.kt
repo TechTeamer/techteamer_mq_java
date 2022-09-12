@@ -20,7 +20,7 @@ class QueueConnection(private val config: QueueConfig) {
 
     fun connect() {
         if (connected) {
-            logger.info("RabbitMq connection already established to ${config.hostname ?: config.url}")
+            logger.warn("RabbitMq connection already established")
             return
         }
 
