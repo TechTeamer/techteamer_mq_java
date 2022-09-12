@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.6.20"
+    kotlin("jvm") version "1.7.10"
     `maven-publish`
     signing
     application
@@ -19,10 +19,10 @@ repositories {
 dependencies {
     implementation("com.rabbitmq:amqp-client:5.14.2")
     implementation("com.google.code.gson:gson:2.9.0")
-    implementation(group = "ch.qos.logback", name = "logback-classic", version = "1.2.6")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
-    implementation("org.jetbrains.kotlin:kotlin-test-junit:1.6.20")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
+    implementation(group = "ch.qos.logback", name = "logback-classic", version = "1.4.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    implementation("org.jetbrains.kotlin:kotlin-test-junit:1.7.10")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.0")
 }
 
 tasks.test {
