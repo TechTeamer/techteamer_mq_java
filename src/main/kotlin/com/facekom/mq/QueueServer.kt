@@ -26,7 +26,6 @@ open class QueueServer(
             if (options.queue.assert) {
                 channel.queueDeclare(exchangeName, durableQueue, exclusiveQueue, autoDeleteQueue, null)
                 logger.info("QueueServer initialized queue($exchangeName) durable($durableQueue) exclusive($exclusiveQueue) autoDelete($autoDeleteQueue)")
-
             } else {
                 logger.info("QueueServer initialize queue($exchangeName) skipped assertion")
             }

@@ -25,7 +25,6 @@ open class Subscriber(
             if (assert) {
                 channel.exchangeDeclare(exchangeName, "fanout", durable, autoDeleteExchange, options.exchange.arguments)
                 logger.info("Subscriber initialized exchange($exchangeName) durable($durable) autoDelete($autoDeleteExchange)")
-
             } else {
                 logger.info("Subscriber initialize exchange($exchangeName) skipped assertion")
             }
@@ -40,4 +39,3 @@ open class Subscriber(
         }
     }
 }
-

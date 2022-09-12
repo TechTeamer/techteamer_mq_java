@@ -42,5 +42,4 @@ class QueueResponse(
     fun hasAnyAttachments(): Boolean {
         return attachments.isEmpty()
     }
-
 }

@@ -51,7 +51,6 @@ open class RPCClient constructor(
 
             replyQueueName = channel.queueDeclare(replyQueueName, durableReplyQueue, exclusiveReplyQueue, autoDeleteReplyQueue, null).queue
             logger.info("RPCClient initialized reply queue($replyQueueName) durable($durableReplyQueue) exclusive($exclusiveReplyQueue) autoDelete($autoDeleteReplyQueue)")
-
         } else {
             logger.info("RPCClient initialize reply queue($replyQueueName) skipped assertion")
         }
@@ -78,7 +77,7 @@ open class RPCClient constructor(
         message: String,
         timeOutMs: Int? = null,
         attachments: MutableMap<String, ByteArray>? = null
-    ) : QueueMessage? {
+    ): QueueMessage? {
         return call(JsonPrimitive(message), timeOutMs, attachments)
     }
 

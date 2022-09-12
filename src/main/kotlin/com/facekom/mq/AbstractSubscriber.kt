@@ -24,7 +24,7 @@ abstract class AbstractSubscriber(
 
     abstract fun initialize()
 
-    fun onConsumeMessage (consumerTag: String?, delivery: Delivery) {
+    fun onConsumeMessage(consumerTag: String?, delivery: Delivery) {
         val channel = connection.getChannel()
         processMessage(channel, delivery, consumerTag)
     }
@@ -44,7 +44,7 @@ abstract class AbstractSubscriber(
         }
     }
 
-    private fun handleMessageRetry (delivery: Delivery, request: QueueMessage, consumerTag: String?): Boolean {
+    private fun handleMessageRetry(delivery: Delivery, request: QueueMessage, consumerTag: String?): Boolean {
         if (!delivery.envelope.isRedeliver || consumerTag == null) {
             return false
         }
@@ -113,7 +113,7 @@ abstract class AbstractSubscriber(
         request: QueueMessage,
         delivery: Delivery
     ): Any? {
-        var handler : QueueHandler? = null
+        var handler: QueueHandler? = null
         var messageBody = data
 
         // handle action command received in message data
@@ -147,7 +147,7 @@ abstract class AbstractSubscriber(
         return null
     }
 
-    fun consume (callback: QueueHandler) {
+    fun consume(callback: QueueHandler) {
         _callback = callback
     }
 
@@ -166,6 +166,4 @@ abstract class AbstractSubscriber(
     open fun nack(channel: Channel, delivery: Delivery) {
         channel.basicNack(delivery.envelope.deliveryTag, false, true)
     }
-
 }
-

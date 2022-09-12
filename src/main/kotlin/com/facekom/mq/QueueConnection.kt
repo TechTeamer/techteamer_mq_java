@@ -54,5 +54,4 @@ class QueueConnection(private val config: QueueConfig) {
         connected = true
         logger.info("RabbitMq connection established to ${config.hostname ?: config.url}")
     }
-
 }

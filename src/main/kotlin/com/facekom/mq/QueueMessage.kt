@@ -18,7 +18,7 @@ class QueueMessage(
         attachments[name] = bytes
     }
 
-    fun serialize () : ByteArray {
+    fun serialize(): ByteArray {
         val obj = JsonObject()
         // {
         //   status: this.status,
@@ -67,7 +67,7 @@ class QueueMessage(
     }
 
     companion object {
-        private fun parseJsonMessagePart (jsonString: String) : JsonObject {
+        private fun parseJsonMessagePart(jsonString: String): JsonObject {
             val parsedJson = JsonParser.parseString(jsonString)
 
             if (!parsedJson.isJsonObject) {
@@ -96,7 +96,7 @@ class QueueMessage(
             return messageObj
         }
 
-        private fun createFromParsedMessage (parsedMessage: JsonObject) : QueueMessage {
+        private fun createFromParsedMessage(parsedMessage: JsonObject): QueueMessage {
             val status = parsedMessage.get("status").asString!!
             val timeoutEl = parsedMessage.get("timeOut")
             val timeout = timeoutEl?.asInt
@@ -105,7 +105,7 @@ class QueueMessage(
             return QueueMessage(status, dataEl, timeout)
         }
 
-        fun createErrorMessage (errorMessage: String?) : QueueMessage {
+        fun createErrorMessage(errorMessage: String?): QueueMessage {
             val errorObj = JsonObject()
             errorObj.add("error", JsonPrimitive(errorMessage ?: ""))
             return QueueMessage("error", errorObj)

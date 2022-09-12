@@ -9,7 +9,6 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
 
-
 class RabbitMqOptions {
     var key: String? = null
     var trust: String? = null
@@ -86,7 +85,7 @@ class RabbitMqOptions {
 
         if (trust != null && trustPwd != null) {
             trustStore.load(FileInputStream(trust!!), trustPwd!!.toCharArray())
-            tmf = TrustManagerFactory.getInstance("SunX509");
+            tmf = TrustManagerFactory.getInstance("SunX509")
             tmf!!.init(trustStore)
         }
 

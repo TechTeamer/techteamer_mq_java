@@ -13,46 +13,46 @@ class QueueConfig {
     var rpcTimeoutMs: Int = 10000
     var rpcQueueMaxSize: Int = 100
 
-    fun url (value: String): QueueConfig {
+    fun url(value: String): QueueConfig {
         url = value
         return this
     }
-    fun hostname (value: String): QueueConfig {
+    fun hostname(value: String): QueueConfig {
         hostname = value
         return this
     }
 
-    fun protocol (value: ConnectionProtocol): QueueConfig {
+    fun protocol(value: ConnectionProtocol): QueueConfig {
         protocol = value.protocol
         return this
     }
 
-    fun port (value: Int): QueueConfig {
+    fun port(value: Int): QueueConfig {
         port = value
         return this
     }
 
-    fun options (value: RabbitMqOptions): QueueConfig {
+    fun options(value: RabbitMqOptions): QueueConfig {
         options = value
         return this
     }
 
-    fun logger (value: Logger): QueueConfig {
+    fun logger(value: Logger): QueueConfig {
         logger = value
         return this
     }
 
-    fun rpcTimeoutMs (value: Int): QueueConfig {
+    fun rpcTimeoutMs(value: Int): QueueConfig {
         rpcTimeoutMs = value
         return this
     }
 
-    fun rpcQueueMaxSize (value: Int): QueueConfig {
+    fun rpcQueueMaxSize(value: Int): QueueConfig {
         rpcQueueMaxSize = value
         return this
     }
 
-    fun isValid () :Boolean {
+    fun isValid(): Boolean {
         if (hostname == "") return false
         if (!options.isValid()) return false
         return true

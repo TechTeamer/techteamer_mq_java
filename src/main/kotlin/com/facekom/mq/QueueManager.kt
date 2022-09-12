@@ -1,12 +1,12 @@
 package com.facekom.mq
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import org.slf4j.Logger
 
 class QueueManager(private val config: QueueConfig) {
     var connection: QueueConnection = QueueConnection(config)
     var logger = config.logger
-    var connected: Boolean = false
 
     var rpcClients = mutableMapOf<String, RPCClient>()
     var rpcServers = mutableMapOf<String, RPCServer>()
@@ -47,8 +47,6 @@ class QueueManager(private val config: QueueConfig) {
             queueClients.forEach { _, queueClient ->
                 queueClient.initialize()
             }
-
-
 
             logger.info("RabbitMq servers and clients initialize finished")
         } catch (err: Exception) {

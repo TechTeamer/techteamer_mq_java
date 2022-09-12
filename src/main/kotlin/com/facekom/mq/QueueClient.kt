@@ -7,7 +7,7 @@ open class QueueClient(
     override val logger: Logger,
     val queueName: String,
     val options: QueueClientOptions = QueueClientOptions()
-    ) : AbstractPublisher(queueConnection, logger, "", queueName) {
+) : AbstractPublisher(queueConnection, logger, "", queueName) {
 
     override fun initialize() {
         if (initialized) {
@@ -25,7 +25,6 @@ open class QueueClient(
             if (options.queue.assert) {
                 channel.queueDeclare(queueName, durableQueue, exclusiveQueue, options.queue.autoDelete, null)
                 logger.info("QueueClient initialized queue($queueName) durable($durableQueue) exclusive($exclusiveQueue) autoDelete($autoDeleteQueue)")
-
             } else {
                 logger.info("QueueClient initialize queue($queueName) skipped assertion")
             }

@@ -69,7 +69,6 @@ open class RPCServerOverride(
         } catch (err: Exception) {
             QueueMessage.createErrorMessage("cannot encode answer").serialize()
         }
-
     }
 }
 
@@ -82,7 +81,6 @@ open class RPCServer(
     var _callback: RpcHandler? = null
     open val actions = mutableMapOf<String, RpcHandler?>()
     var initialized: Boolean = false
-
 
     fun initialize() {
         if (initialized) {
@@ -136,7 +134,7 @@ open class RPCServer(
         }
     }
 
-    fun consume (callback: RpcHandler) {
+    fun consume(callback: RpcHandler) {
         _callback = callback
     }
 
@@ -144,9 +142,9 @@ open class RPCServer(
         data: JsonElement?,
         request: QueueMessage,
         delivery: Delivery,
-        response: QueueResponse,
+        response: QueueResponse
     ): JsonElement? = run {
-        var handler : RpcHandler? = null
+        var handler: RpcHandler? = null
         var messageBody = data
 
         // handle action command received in message data
@@ -179,5 +177,4 @@ open class RPCServer(
 
         return null
     }
-
 }
