@@ -15,7 +15,7 @@ abstract class AbstractPublisher(
 
     abstract fun initialize()
 
-    open fun <T>sendAction(
+    open fun <T> sendAction(
         action: QueueAction<T>,
         correlationId: String? = null,
         timeOut: Int? = null,

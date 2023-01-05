@@ -44,21 +44,23 @@ class PubSubTest {
         var testMessageReceived = false
         var testMessageValid = false
 
-        subscriber.consume { data, props, request, delivery -> run {
-            testMessageReceived = true
-            if (data != null && !data.isJsonPrimitive) return@consume
-            val dataString = data?.asString
-            testMessageValid = dataString == ("testData")
-        }}
+        subscriber.consume { data, props, request, delivery ->
+            run {
+                testMessageReceived = true
+                if (data != null && !data.isJsonPrimitive) return@consume
+                val dataString = data?.asString
+                testMessageValid = dataString == ("testData")
+            }
+        }
 
         publisher.send("testData", attachments = testhelper.attachmentList)
 
         delay(timeoutMs.toLong()) // allow time for network
 
-        assertTrue ("Message should have arrived") {
+        assertTrue("Message should have arrived") {
             testMessageReceived
         }
-        assertTrue ("Message should be valid") {
+        assertTrue("Message should be valid") {
             testMessageValid
         }
     }
@@ -69,25 +71,29 @@ class PubSubTest {
         var testMessageReceivedTwo = false
         var testMessageOneValid = false
         var testMessageTwoValid = false
-        val consumerOne : QueueHandler = { data, props, request, delivery -> run {
+        val consumerOne: QueueHandler = { data, props, request, delivery ->
+            run {
 
-            if (data != null && !data.isJsonPrimitive) return@run
+                if (data != null && !data.isJsonPrimitive) return@run
 
-            if (data?.asString == ("testData")) {
-                testMessageOneValid = true
+                if (data?.asString == ("testData")) {
+                    testMessageOneValid = true
+                }
+                testMessageReceivedOne = true
             }
-            testMessageReceivedOne = true
-        }}
+        }
 
-        val consumerTwo : QueueHandler = { data, props, request, delivery -> run {
+        val consumerTwo: QueueHandler = { data, props, request, delivery ->
+            run {
 
-            if (data != null && !data.isJsonPrimitive) return@run
+                if (data != null && !data.isJsonPrimitive) return@run
 
-            if (data?.asString == ("testData")) {
-                testMessageTwoValid = true
+                if (data?.asString == ("testData")) {
+                    testMessageTwoValid = true
+                }
+                testMessageReceivedTwo = true
             }
-            testMessageReceivedTwo = true
-        }}
+        }
 
         subscriber.consume(consumerOne)
         subscriber2.consume(consumerTwo)
@@ -96,16 +102,16 @@ class PubSubTest {
 
         delay(timeoutMs.toLong()) // allow time for network
 
-        assertTrue ("Both messages should have arrived: one: $testMessageReceivedOne") {
+        assertTrue("Both messages should have arrived: one: $testMessageReceivedOne") {
             testMessageReceivedOne
         }
-        assertTrue ("Both messages should have arrived: two: $testMessageReceivedTwo") {
+        assertTrue("Both messages should have arrived: two: $testMessageReceivedTwo") {
             testMessageReceivedTwo
         }
-        assertTrue ("Both message should be valid: one: $testMessageOneValid") {
+        assertTrue("Both message should be valid: one: $testMessageOneValid") {
             testMessageOneValid
         }
-        assertTrue ("Both message should be valid: two: $testMessageTwoValid") {
+        assertTrue("Both message should be valid: two: $testMessageTwoValid") {
             testMessageTwoValid
         }
     }
@@ -124,12 +130,11 @@ class PubSubTest {
 
         delay(timeoutMs.toLong())
 
-        assertTrue ("Message should have been processed") {
+        assertTrue("Message should have been processed") {
             testMessageReceived
         }
-        assertTrue ("Message data should match") {
+        assertTrue("Message data should match") {
             testResult == null
         }
     }
 }
-

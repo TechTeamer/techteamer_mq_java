@@ -2,9 +2,12 @@ package com.facekom.mq
 
 import com.google.gson.JsonElement
 import com.google.gson.JsonPrimitive
-import com.rabbitmq.client.*
+import com.rabbitmq.client.AMQP
+import com.rabbitmq.client.Channel
+import com.rabbitmq.client.RpcClient
+import com.rabbitmq.client.RpcClientParams
 import org.slf4j.Logger
-import java.util.UUID
+import java.util.*
 
 open class RPCClient constructor(
     open val connection: QueueConnection,
@@ -25,7 +28,7 @@ open class RPCClient constructor(
 
         try {
             val channel = connection.getChannel()
-            _getReplyQueue(connection.getChannel())
+            getReplyQueue(connection.getChannel())
 
             val rpcOptions = RpcClientParams()
             rpcOptions.channel(channel)
@@ -41,7 +44,7 @@ open class RPCClient constructor(
         }
     }
 
-    fun _getReplyQueue(channel: Channel) {
+    private fun getReplyQueue(channel: Channel) {
         replyQueueName = options.replyQueueName
 
         if (options.replyQueue.assert) {
@@ -49,14 +52,20 @@ open class RPCClient constructor(
             val exclusiveReplyQueue = options.replyQueue.exclusive
             val autoDeleteReplyQueue = options.replyQueue.autoDelete
 
-            replyQueueName = channel.queueDeclare(replyQueueName, durableReplyQueue, exclusiveReplyQueue, autoDeleteReplyQueue, null).queue
+            replyQueueName = channel.queueDeclare(
+                replyQueueName,
+                durableReplyQueue,
+                exclusiveReplyQueue,
+                autoDeleteReplyQueue,
+                null
+            ).queue
             logger.info("RPCClient initialized reply queue($replyQueueName) durable($durableReplyQueue) exclusive($exclusiveReplyQueue) autoDelete($autoDeleteReplyQueue)")
         } else {
             logger.info("RPCClient initialize reply queue($replyQueueName) skipped assertion")
         }
     }
 
-    open fun <T>callAction(
+    open fun <T> callAction(
         action: QueueAction<T>,
         timeOutMs: Int?,
         attachments: MutableMap<String, ByteArray>?

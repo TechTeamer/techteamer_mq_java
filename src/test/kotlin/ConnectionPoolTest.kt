@@ -76,7 +76,7 @@ class ConnectionPoolTest {
         pool.setLogger(testhelper.logger)
         pool.setupQueueManagers(mapOf(defaultConnectionName to defaultConfig, "bad" to badConfig))
 
-        assertFails ("Connection should fail with wrong config") {
+        assertFails("Connection should fail with wrong config") {
             pool.connect()
         }
 

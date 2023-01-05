@@ -3,7 +3,6 @@ import com.google.gson.JsonElement
 import com.rabbitmq.client.BasicProperties
 import com.rabbitmq.client.Delivery
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -123,6 +122,5 @@ class QueueTest {
         delay((timeoutMs * 4).toLong()) // allow time for network
         queueServer.logger.debug("WAITED")
         assertTrue { timeoutHandledWell }
-
     }
 }

@@ -17,6 +17,7 @@ class QueueConfig {
         url = value
         return this
     }
+
     fun hostname(value: String): QueueConfig {
         hostname = value
         return this

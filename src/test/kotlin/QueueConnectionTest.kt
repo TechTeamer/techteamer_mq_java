@@ -23,7 +23,7 @@ class QueueConnectionTest {
             .url("amqp://guest:gue@localhost:67/")
         val connection = QueueConnection(myWrongConfig)
 
-        assertFails ("Connection should fail with wrong config") {
+        assertFails("Connection should fail with wrong config") {
             connection.connect()
         }
 

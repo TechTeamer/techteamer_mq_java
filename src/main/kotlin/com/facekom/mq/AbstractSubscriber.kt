@@ -66,7 +66,11 @@ abstract class AbstractSubscriber(
         return false
     }
 
-    open fun processMessage(channel: Channel, delivery: Delivery, consumerTag: String?): Any? = CoroutineScope(Dispatchers.IO).launch {
+    open fun processMessage(
+        channel: Channel,
+        delivery: Delivery,
+        consumerTag: String?
+    ): Any? = CoroutineScope(Dispatchers.IO).launch {
         val request = parseMessage(delivery)
 
         if (request == null) {
@@ -113,38 +117,35 @@ abstract class AbstractSubscriber(
         request: QueueMessage,
         delivery: Delivery
     ): Any? {
-        var handler: QueueHandler? = null
+        var handler: QueueHandler? = getActionHandlerForMessage(data)
         var messageBody = data
 
-        // handle action command received in message data
-        if (data != null && data.isJsonObject) {
-            val dataObj = data.asJsonObject
-            if (dataObj.has("action")) {
-                val actionEl = dataObj.get("action")
-                if (actionEl.isJsonPrimitive) {
-                    val actionPrimitive = actionEl.asJsonPrimitive
-                    if (actionPrimitive.isString) {
-                        val action = actionPrimitive.asString
-                        handler = actions.get(action)
-                        messageBody = dataObj.get("data")
-                    }
-                }
-            }
-        }
-
-        if (handler == null) {
-            if (_callback != null) {
-                handler = _callback
-            } else {
-                return null
-            }
-        }
-
         if (handler != null) {
-            handler.invoke(messageBody, props, request, delivery)
+            // get message body for action
+            messageBody = data?.asJsonObject?.get("data")
         }
+
+        if (handler == null && _callback != null) {
+            handler = _callback
+        }
+
+        handler?.invoke(messageBody, props, request, delivery)
 
         return null
+    }
+
+    private fun getActionHandlerForMessage(data: JsonElement?): QueueHandler? {
+        var handler: QueueHandler? = null
+
+        // handle action command received in message data
+        if (data != null && data.isJsonObject && data.asJsonObject.has("action")) {
+            val actionEl = data.asJsonObject.get("action")
+            if (actionEl.isJsonPrimitive && actionEl.asJsonPrimitive.isString) {
+                handler = actions.get(actionEl.asJsonPrimitive.asString)
+            }
+        }
+
+        return handler
     }
 
     fun consume(callback: QueueHandler) {

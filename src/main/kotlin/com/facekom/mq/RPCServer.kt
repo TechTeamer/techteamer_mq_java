@@ -1,7 +1,9 @@
 package com.facekom.mq
 
 import com.google.gson.JsonElement
-import com.rabbitmq.client.*
+import com.rabbitmq.client.AMQP
+import com.rabbitmq.client.Delivery
+import com.rabbitmq.client.RpcServer
 import kotlinx.coroutines.*
 import org.slf4j.Logger
 
@@ -144,37 +146,36 @@ open class RPCServer(
         delivery: Delivery,
         response: QueueResponse
     ): JsonElement? = run {
-        var handler: RpcHandler? = null
+        var handler: RpcHandler? = getActionHandlerForMessage(data)
         var messageBody = data
 
-        // handle action command received in message data
-        if (data != null && data.isJsonObject) {
-            val dataObj = data.asJsonObject
-            if (dataObj.has("action")) {
-                val actionEl = dataObj.get("action")
-                if (actionEl.isJsonPrimitive) {
-                    val actionPrimitive = actionEl.asJsonPrimitive
-                    if (actionPrimitive.isString) {
-                        val action = actionPrimitive.asString
-                        handler = actions.get(action)
-                        messageBody = dataObj.get("data")
-                    }
-                }
-            }
+        if (handler != null) {
+            // get message body for action
+            messageBody = data?.asJsonObject?.get("data")
+        }
+
+        if (handler == null && _callback != null) {
+            handler = _callback
         }
 
         if (handler == null) {
-            if (_callback != null) {
-                handler = _callback
-            } else {
-                return null
+            return null
+        }
+
+        return handler.invoke(messageBody, request, response, delivery)
+    }
+
+    private fun getActionHandlerForMessage(data: JsonElement?): RpcHandler? {
+        var handler: RpcHandler? = null
+
+        // handle action command received in message data
+        if (data != null && data.isJsonObject && data.asJsonObject.has("action")) {
+            val actionEl = data.asJsonObject.get("action")
+            if (actionEl.isJsonPrimitive && actionEl.asJsonPrimitive.isString) {
+                handler = actions.get(actionEl.asJsonPrimitive.asString)
             }
         }
 
-        if (handler != null) {
-            return handler.invoke(messageBody, request, response, delivery)
-        }
-
-        return null
+        return handler
     }
 }

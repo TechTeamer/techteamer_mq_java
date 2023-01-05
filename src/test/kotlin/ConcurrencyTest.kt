@@ -2,7 +2,7 @@ import com.facekom.mq.*
 import kotlinx.coroutines.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import java.util.Date
+import java.util.*
 import kotlin.math.abs
 import kotlin.test.*
 
@@ -103,8 +103,8 @@ class ConcurrencyTest {
 
             delay(1500)
             return@assertTrue slowCallStarted!! < fastCallStarted &&
-                    slowCallFinished!! > fastCallFinished &&
-                    fastCallFinishedTwo!! < slowCallFinished
+                slowCallFinished!! > fastCallFinished &&
+                fastCallFinishedTwo!! < slowCallFinished
         }
     }
 
@@ -136,7 +136,6 @@ class ConcurrencyTest {
 
             Thread.sleep(300)
 
-
             queueClient.sendSimpleAction("testAction", "testData", null, null)
 
             delay(1500)
@@ -164,7 +163,6 @@ class ConcurrencyTest {
                 callTwoFinished = Date()
                 return@registerAction
             }
-
 
             publisher.sendSimpleAction("testAction", "testData", null, null)
 

@@ -10,7 +10,6 @@ import kotlin.test.*
 
 var rpcServerTestResult: QueueMessage? = null
 
-
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RPCTest {
     private val testhelper = TestHelper()
@@ -98,7 +97,6 @@ class RPCTest {
             override fun getData(): JsonElement {
                 return JsonParser.parseString(data)
             }
-
         }
 
         val action = MyAction("testAction")
