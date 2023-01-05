@@ -50,6 +50,8 @@ class QueueConnection(private val config: QueueConfig) {
             }
         }
 
+        factory.isAutomaticRecoveryEnabled = config.options.automaticRecoveryEnabled
+
         connection = factory.newConnection()
         connected = true
         logger.info("RabbitMq connection established to ${config.hostname ?: config.url}")
