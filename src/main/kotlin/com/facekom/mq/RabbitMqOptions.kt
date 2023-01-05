@@ -112,11 +112,13 @@ class RabbitMqOptions {
 
 class TrustAllX509TrustManager : X509TrustManager {
     @Throws(CertificateException::class)
+    @SuppressWarnings("kotlin:S4830")
     override fun checkClientTrusted(chain: Array<X509Certificate?>?, authType: String?) {
         // trust all
     }
 
     @Throws(CertificateException::class)
+    @SuppressWarnings("kotlin:S4830")
     override fun checkServerTrusted(chain: Array<X509Certificate?>?, authType: String?) {
         // trust all
     }
