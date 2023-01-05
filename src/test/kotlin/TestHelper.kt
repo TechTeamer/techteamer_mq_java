@@ -56,6 +56,7 @@ class TestHelper {
                         .password("pdfservice")
                         .userName("pdfservice")
                         .allowTlsWithoutTrustStore(true)
+                        .automaticRecoveryEnabled(true)
                 )
         }
 

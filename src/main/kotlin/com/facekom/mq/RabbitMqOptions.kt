@@ -18,6 +18,7 @@ class RabbitMqOptions {
     var password: String? = null
     var vhost: String? = null
     var allowTlsWithoutTrustStore: Boolean = false
+    var automaticRecoveryEnabled: Boolean = true // true is also the default for the rabbitmq client
 
     fun key(value: String): RabbitMqOptions {
         key = value
@@ -48,8 +49,19 @@ class RabbitMqOptions {
         password = value
         return this
     }
+
     fun vhost(value: String): RabbitMqOptions {
         vhost = value
+        return this
+    }
+
+    fun allowTlsWithoutTrustStore(value: Boolean): RabbitMqOptions {
+        allowTlsWithoutTrustStore = value
+        return this
+    }
+
+    fun automaticRecoveryEnabled(value: Boolean): RabbitMqOptions {
+        automaticRecoveryEnabled = value
         return this
     }
 
@@ -61,11 +73,6 @@ class RabbitMqOptions {
             return false
         }
         return true
-    }
-
-    fun allowTlsWithoutTrustStore(value: Boolean): RabbitMqOptions {
-        allowTlsWithoutTrustStore = value
-        return this
     }
 
     fun getSSLContext(): SSLContext {
