@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.7.10"
+    kotlin("jvm") version "1.8.0"
     `maven-publish`
     signing
     application
@@ -17,12 +17,12 @@ repositories {
 }
 
 dependencies {
-    implementation("com.rabbitmq:amqp-client:5.14.2")
-    implementation("com.google.code.gson:gson:2.9.0")
-    implementation(group = "ch.qos.logback", name = "logback-classic", version = "1.4.0")
+    implementation("com.rabbitmq:amqp-client:5.16.0")
+    implementation("com.google.code.gson:gson:2.10")
+    implementation(group = "ch.qos.logback", name = "logback-classic", version = "1.4.5")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
-    implementation("org.jetbrains.kotlin:kotlin-test-junit:1.7.10")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.9.0")
+    implementation("org.jetbrains.kotlin:kotlin-test-junit:1.8.0")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.1")
 }
 
 tasks.test {
@@ -104,8 +104,8 @@ publishing {
                         email.set("zoltan.nagy@facekom.com")
                     }
                     developer {
-                        name.set("Ferenc Gulyas")
-                        email.set("ferenc.gulyas@facekom.com")
+                        name.set("Bence Tihanyi")
+                        email.set("bence.tihanyi@facekom.com")
                     }
                 }
             }
