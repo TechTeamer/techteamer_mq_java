@@ -31,3 +31,4 @@ build
 *.pfx
 .DS_Store
 *.gpg
+!bin/FaceKomDev-maven-signing.armored.key.gpg
