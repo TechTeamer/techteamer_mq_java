@@ -7,6 +7,9 @@ plugins {
     application
     id("org.sonarqube") version "3.3"
     id("jacoco")
+    id("org.jlleitschuh.gradle.ktlint") version "11.0.0"
+    id("org.owasp.dependencycheck") version "7.1.2"
+    id("com.github.ben-manes.versions") version "0.42.0"
 }
 
 group = "com.facekom"
@@ -34,6 +37,12 @@ tasks.test {
     finalizedBy(tasks.jacocoTestReport)
 }
 
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of("11"))
+    }
+}
+
 tasks.withType<KotlinCompile>().all {
     kotlinOptions.jvmTarget = JavaVersion.VERSION_11.toString()
 }
@@ -48,7 +57,24 @@ application {
 }
 
 buildscript {
+}
 
+tasks.named("check") {
+    dependsOn(tasks.named("dependencyCheckAnalyze"))
+}
+// For reproducible builds, see: https://docs.gradle.org/7.0/userguide/dependency_locking.html
+dependencyLocking {
+    lockAllConfigurations()
+}
+
+tasks.getByName<Zip>("distZip").archiveFileName.set("${project.name}.zip")
+tasks.getByName<Tar>("distTar").enabled = false
+
+dependencyCheck {
+    // Specifies if the build should be failed if a CVSS score above a specified level is identified.
+    // See: https://nvd.nist.gov/vuln-metrics/cvss
+    failBuildOnCVSS = 6.6f
+    scanConfigurations = mutableListOf("runtimeClasspath")
 }
 
 java {
