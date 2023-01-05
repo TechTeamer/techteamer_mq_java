@@ -1,3 +1,9 @@
+1.3.0
+
+- added option to toggle automatic connection recovery
+- added security checks
+- updated dependencies
+
 1.2.0
 
 - updated config options to enable providing detailed connection params
