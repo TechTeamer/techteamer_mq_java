@@ -33,7 +33,7 @@ jobs:
     - stage: test
       name: unit tests and code quality # build matrix craziness https://docs.travis-ci.com/user/build-matrix/#explicitly-included-jobs-with-only-one-element-in-the-build-matrix
       script:
-        - ./gradlew test jacocoTestReport sonarqube --info
+        - ./gradlew sonar --info
     - stage: release
       name: publish release
       script:
