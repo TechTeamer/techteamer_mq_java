@@ -47,7 +47,7 @@ class TestHelper {
         if (System.getenv("TEST_ENV") == "travis") {
             testConfig.url("amqp://guest:guest@localhost:5672")
         } else {
-            testConfig.hostname("rabbitmq_services")
+            testConfig.hostname("rabbitmq-services")
                 .port(5671)
                 .protocol(ConnectionProtocol.AMQPS)
                 .options(
