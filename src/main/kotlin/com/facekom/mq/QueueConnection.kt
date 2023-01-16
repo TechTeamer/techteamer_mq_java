@@ -3,7 +3,6 @@ package com.facekom.mq
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Connection
 import com.rabbitmq.client.ConnectionFactory
-import com.sun.net.httpserver.Authenticator.Success
 
 class QueueConnection(private val config: QueueConfig) {
     private var factory = ConnectionFactory()
