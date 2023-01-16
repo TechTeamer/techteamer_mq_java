@@ -72,14 +72,19 @@ class QueueConfig {
 
             var credentials = ""
             var port = ""
+            var vhost = ""
+
             if (config.options.userName != null && config.options.password != null) {
                 credentials = "${config.options.userName}:${config.options.password}@"
             }
             if (config.port != null) {
                 port = ":${config.port}"
             }
+            if (config.options.vhost != null) {
+                vhost = "/${config.options.vhost}"
+            }
 
-            return "${config.protocol}://$credentials${config.hostname}$port/${config.options.vhost}"
+            return "${config.protocol}://$credentials${config.hostname}$port$vhost"
         }
 
         fun stripCredentialsFromUrl(url: String): String {
