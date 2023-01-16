@@ -1,4 +1,3 @@
-import com.facekom.mq.ConnectionProtocol
 import com.facekom.mq.QueueConfig
 import com.facekom.mq.QueueMessage
 import com.facekom.mq.RabbitMqOptions
@@ -45,10 +44,12 @@ class TestHelper {
 
     init {
         if (System.getenv("TEST_ENV") == "travis") {
-            testConfig.urls(mutableListOf(
-                "amqp://invalid:credentials@localhost:5672",
-                "amqp://guest:guest@localhost:5672"
-            ))
+            testConfig.urls(
+                mutableListOf(
+                    "amqp://invalid:credentials@localhost:5672",
+                    "amqp://guest:guest@localhost:5672"
+                )
+            )
         } else {
             testConfig.urls(
                 mutableListOf(

@@ -87,8 +87,8 @@ class QueueConfig {
                 return url
             }
 
-            val protocol=url.split("://")[0]
-            val ending=url.split("@").last()
+            val protocol = url.split("://")[0]
+            val ending = url.split("@").last()
 
             return "$protocol://$ending"
         }

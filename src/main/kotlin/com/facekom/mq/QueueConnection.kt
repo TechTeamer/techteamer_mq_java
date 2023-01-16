@@ -24,7 +24,7 @@ class QueueConnection(private val config: QueueConfig) {
             return
         }
 
-        if (config.urls.size == 0) { //backwards compatibility - add url object as url string...
+        if (config.urls.size == 0) { // backwards compatibility - add url object as url string...
             config.url(QueueConfig.getUrl(config))
         }
 
