@@ -11,6 +11,7 @@ class TestHelper {
     val logger: Logger = LoggerFactory.getLogger("brandNewTestLogger")
 
     var testConfig = QueueConfig()
+    var testConfigObject = QueueConfig()
 
     val messageOK = { data: JsonElement -> QueueMessage("ok", data) }
     val messageErr = { data: JsonElement -> QueueMessage("error", data) }
@@ -45,18 +46,47 @@ class TestHelper {
 
     init {
         if (System.getenv("TEST_ENV") == "travis") {
-            testConfig.url("amqp://guest:guest@localhost:5672")
-        } else {
-            testConfig.hostname("rabbitmq-services")
-                .port(5671)
-                .protocol(ConnectionProtocol.AMQPS)
+            testConfig.urls(
+                mutableListOf(
+                    "amqp://invalid:credentials@localhost:5672",
+                    "amqp://guest:guest@localhost:5672"
+                )
+            )
+
+            testConfigObject
+                .protocol(ConnectionProtocol.AMQP)
+                .hostname("localhost")
+                .port(5672)
                 .options(
                     RabbitMqOptions()
-                        .vhost("pdfservice")
-                        .password("pdfservice")
-                        .userName("pdfservice")
+                        .userName("guest")
+                        .password("guest")
+                )
+        } else {
+            testConfig.urls(
+                mutableListOf(
+                    "amqps://invalid:credentials@rabbitmq-cluster-1:5671/pdfservice",
+                    "amqps://pdfservice:pdfservice@rabbitmq-cluster-2:5671/pdfservice",
+                    "amqps://pdfservice:pdfservice@rabbitmq-cluster-3:5671/pdfservice"
+                )
+            )
+                .options(
+                    RabbitMqOptions()
                         .allowTlsWithoutTrustStore(true)
                         .automaticRecoveryEnabled(true)
+                )
+
+            testConfigObject
+                .protocol(ConnectionProtocol.AMQPS)
+                .hostname("rabbitmq-cluster-1")
+                .port(5671)
+                .options(
+                    RabbitMqOptions()
+                        .allowTlsWithoutTrustStore(true)
+                        .automaticRecoveryEnabled(true)
+                        .userName("pdfservice")
+                        .password("pdfservice")
+                        .vhost("pdfservice")
                 )
         }
 
