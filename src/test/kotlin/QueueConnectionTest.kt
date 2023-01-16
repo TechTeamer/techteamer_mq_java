@@ -31,4 +31,13 @@ class QueueConnectionTest {
             connection.connected
         }
     }
+
+    @Test
+    fun testConnectWithObject() {
+        val connection = QueueConnection(testhelper.testConfigObject)
+
+        connection.connect()
+
+        assertTrue { connection.connected }
+    }
 }

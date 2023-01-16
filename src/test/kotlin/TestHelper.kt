@@ -1,3 +1,4 @@
+import com.facekom.mq.ConnectionProtocol
 import com.facekom.mq.QueueConfig
 import com.facekom.mq.QueueMessage
 import com.facekom.mq.RabbitMqOptions
@@ -10,6 +11,7 @@ class TestHelper {
     val logger: Logger = LoggerFactory.getLogger("brandNewTestLogger")
 
     var testConfig = QueueConfig()
+    var testConfigObject = QueueConfig()
 
     val messageOK = { data: JsonElement -> QueueMessage("ok", data) }
     val messageErr = { data: JsonElement -> QueueMessage("error", data) }
@@ -50,6 +52,16 @@ class TestHelper {
                     "amqp://guest:guest@localhost:5672"
                 )
             )
+
+            testConfigObject
+                .protocol(ConnectionProtocol.AMQP)
+                .hostname("localhost")
+                .port(5672)
+                .options(
+                    RabbitMqOptions()
+                        .userName("guest")
+                        .password("guest")
+                )
         } else {
             testConfig.urls(
                 mutableListOf(
@@ -63,6 +75,20 @@ class TestHelper {
                         .allowTlsWithoutTrustStore(true)
                         .automaticRecoveryEnabled(true)
                 )
+
+            testConfigObject
+                .protocol(ConnectionProtocol.AMQPS)
+                .hostname("rabbitmq-cluster-1")
+                .port(5671)
+                .options(
+                    RabbitMqOptions()
+                        .allowTlsWithoutTrustStore(true)
+                        .automaticRecoveryEnabled(true)
+                        .userName("pdfservice")
+                        .password("pdfservice")
+                        .vhost("pdfservice")
+                )
+
         }
 
         val base64Decoder = Base64.getDecoder()
