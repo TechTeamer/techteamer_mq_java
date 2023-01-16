@@ -45,16 +45,20 @@ class TestHelper {
 
     init {
         if (System.getenv("TEST_ENV") == "travis") {
-            testConfig.url("amqp://guest:guest@localhost:5672")
+            testConfig.urls(mutableListOf(
+                "amqp://invalid:credentials@localhost:5672",
+                "amqp://guest:guest@localhost:5672"
+            ))
         } else {
-            testConfig.hostname("rabbitmq-services")
-                .port(5671)
-                .protocol(ConnectionProtocol.AMQPS)
+            testConfig.urls(
+                mutableListOf(
+                    "amqps://invalid:credentials@rabbitmq-cluster-1:5671/pdfservice",
+                    "amqps://pdfservice:pdfservice@rabbitmq-cluster-2:5671/pdfservice",
+                    "amqps://pdfservice:pdfservice@rabbitmq-cluster-3:5671/pdfservice"
+                )
+            )
                 .options(
                     RabbitMqOptions()
-                        .vhost("pdfservice")
-                        .password("pdfservice")
-                        .userName("pdfservice")
                         .allowTlsWithoutTrustStore(true)
                         .automaticRecoveryEnabled(true)
                 )

@@ -13,8 +13,9 @@ class QueueConfig {
     var rpcTimeoutMs: Int = 10000
     var rpcQueueMaxSize: Int = 100
 
-    fun urls(value: MutableList<String>) {
+    fun urls(value: MutableList<String>): QueueConfig {
         urls = value
+        return this
     }
 
     fun url(value: String): QueueConfig {
