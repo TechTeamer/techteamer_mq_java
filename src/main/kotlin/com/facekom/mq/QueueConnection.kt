@@ -3,6 +3,7 @@ package com.facekom.mq
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Connection
 import com.rabbitmq.client.ConnectionFactory
+import com.sun.net.httpserver.Authenticator.Success
 
 class QueueConnection(private val config: QueueConfig) {
     private var factory = ConnectionFactory()
@@ -24,36 +25,42 @@ class QueueConnection(private val config: QueueConfig) {
             return
         }
 
-        if (config.url != null) {
-            val match = "(^amqps?):.*".toRegex().find(config.url!!)
-                ?: throw Exception("Cannot identify the proper protocol from url.")
+        if (config.urls.size == 0) { //backwards compatibility - add url object as url string...
+            config.url(QueueConfig.getUrl(config))
+        }
 
-            val (protocol) = match.destructured
+        connected = connectToUrls(config.urls)
 
-            if (protocol == "amqps") {
-                val sslContext = config.options.getSSLContext()
-                factory.useSslProtocol(sslContext)
-            }
-            factory.setUri(config.url)
-        } else {
-            factory.host = config.hostname ?: ConnectionFactory.DEFAULT_HOST
-            factory.port = config.port ?: ConnectionFactory.DEFAULT_AMQP_PORT
-            factory.virtualHost = config.options.vhost ?: ConnectionFactory.DEFAULT_VHOST
+        if (!connected) {
+            throw Exception("All connection attempts failed!")
+        }
+    }
 
-            if (config.protocol == "amqps") {
-                val sslContext = config.options.getSSLContext()
-                factory.useSslProtocol(sslContext)
-            }
-            if (config.options.userName != null && config.options.password != null) {
-                factory.username = config.options.userName
-                factory.password = config.options.password
+    private fun connectToUrls(urls: MutableList<String>): Boolean {
+        for (url in urls) {
+            val logUrl = QueueConfig.stripCredentialsFromUrl(url) // Don't log credentials...
+
+            try {
+                val match = "(^amqps?):.*".toRegex().find(url) ?: throw Exception("Cannot identify the proper protocol from url.")
+
+                val (protocol) = match.destructured
+
+                if (protocol == "amqps") {
+                    val sslContext = config.options.getSSLContext()
+                    factory.useSslProtocol(sslContext)
+                }
+
+                factory.setUri(url)
+                factory.isAutomaticRecoveryEnabled = config.options.automaticRecoveryEnabled
+
+                connection = factory.newConnection()
+                logger.info("RabbitMq connection established to $logUrl")
+                return true
+            } catch (error: Exception) {
+                logger.error("Failed to connect to $logUrl $error")
             }
         }
 
-        factory.isAutomaticRecoveryEnabled = config.options.automaticRecoveryEnabled
-
-        connection = factory.newConnection()
-        connected = true
-        logger.info("RabbitMq connection established to ${config.hostname ?: config.url}")
+        return false
     }
 }
