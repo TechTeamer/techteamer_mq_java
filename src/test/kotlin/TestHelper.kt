@@ -88,7 +88,6 @@ class TestHelper {
                         .password("pdfservice")
                         .vhost("pdfservice")
                 )
-
         }
 
         val base64Decoder = Base64.getDecoder()
