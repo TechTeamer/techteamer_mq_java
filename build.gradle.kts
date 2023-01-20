@@ -8,7 +8,7 @@ plugins {
     id("org.sonarqube") version "3.3"
     id("jacoco")
     id("org.jlleitschuh.gradle.ktlint") version "11.0.0"
-    id("org.owasp.dependencycheck") version "7.1.2"
+    id("org.owasp.dependencycheck") version "8.0.1"
     id("com.github.ben-manes.versions") version "0.42.0"
 }
 
