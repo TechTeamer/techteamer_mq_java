@@ -61,7 +61,7 @@ open class AssertExchangeOptions {
     var assert: Boolean = true
     var durable: Boolean = true
     var autoDelete: Boolean = false
-    var arguments: Map<String, Any> = mutableMapOf()
+    open var arguments: Map<String, Any> = mutableMapOf()
 }
 
 open class AssertQueueOptions {
@@ -69,6 +69,7 @@ open class AssertQueueOptions {
     var durable: Boolean = true
     var exclusive: Boolean = false
     var autoDelete: Boolean = false
+    open var arguments: Map<String, Any> = mutableMapOf()
 }
 
 open class RpcClientOptions {
@@ -86,7 +87,7 @@ open class RpcClientOptions {
 open class RpcServerOptions {
     var timeOutMs: Int = 10000
     var prefetchCount: Int = 1
-    val queue: AssertQueueOptions = AssertQueueOptions()
+    var queue: AssertQueueOptions = AssertQueueOptions()
 }
 
 open class PublisherOptions {
@@ -96,7 +97,7 @@ open class PublisherOptions {
 open class SubscriberOptions {
     val connection: ConnectionOptions = ConnectionOptions()
     val exchange: AssertExchangeOptions = AssertExchangeOptions()
-    val queue: AssertQueueOptions = AssertQueueOptions()
+    var queue: AssertQueueOptions = AssertQueueOptions()
 
     init {
         queue.exclusive = true
@@ -104,10 +105,10 @@ open class SubscriberOptions {
 }
 
 open class QueueClientOptions {
-    val queue: AssertQueueOptions = AssertQueueOptions()
+    var queue: AssertQueueOptions = AssertQueueOptions()
 }
 
 open class QueueServerOptions {
     var connection: ConnectionOptions = ConnectionOptions()
-    val queue: AssertQueueOptions = AssertQueueOptions()
+    var queue: AssertQueueOptions = AssertQueueOptions()
 }

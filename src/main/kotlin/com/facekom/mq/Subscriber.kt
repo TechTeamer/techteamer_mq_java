@@ -29,12 +29,17 @@ open class Subscriber(
                 logger.info("Subscriber initialize exchange($exchangeName) skipped assertion")
             }
 
+            val durableQueue = options.queue.durable
+            val exclusiveQueue = options.queue.exclusive
+            val autoDeleteQueue = options.queue.autoDelete
+            val arguments = options.queue.arguments
+
             val queueName = channel.queueDeclare(
                 "",
-                options.queue.durable,
-                options.queue.exclusive,
-                options.queue.autoDelete,
-                null
+                durableQueue,
+                exclusiveQueue,
+                autoDeleteQueue,
+                arguments,
             ).queue
             channel.queueBind(queueName, exchangeName, "")
             channel.basicConsume(queueName, false, ::onConsumeMessage) { _: String? -> } // consumerTag parameter
