@@ -18,12 +18,13 @@ open class QueueClient(
         val durableQueue = options.queue.durable
         val exclusiveQueue = options.queue.exclusive
         val autoDeleteQueue = options.queue.autoDelete
+        val arguments = options.queue.arguments
 
         try {
             val channel = queueConnection.getChannel()
 
             if (options.queue.assert) {
-                channel.queueDeclare(queueName, durableQueue, exclusiveQueue, options.queue.autoDelete, null)
+                channel.queueDeclare(queueName, durableQueue, exclusiveQueue, autoDeleteQueue, arguments)
                 logger.info("QueueClient initialized queue($queueName) durable($durableQueue) exclusive($exclusiveQueue) autoDelete($autoDeleteQueue)")
             } else {
                 logger.info("QueueClient initialize queue($queueName) skipped assertion")

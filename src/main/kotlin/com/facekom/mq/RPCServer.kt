@@ -93,12 +93,13 @@ open class RPCServer(
         val durableQueue = options.queue.durable
         val exclusiveQueue = options.queue.exclusive
         val autoDeleteQueue = options.queue.autoDelete
+        val arguments = options.queue.arguments
 
         try {
             val channel = connection.getChannel()
 
             if (options.queue.assert) {
-                channel.queueDeclare(name, durableQueue, exclusiveQueue, autoDeleteQueue, null)
+                channel.queueDeclare(name, durableQueue, exclusiveQueue, autoDeleteQueue, arguments)
                 logger.info("RPCServer initialized queue($name) durable($durableQueue) exclusive($exclusiveQueue) autoDelete($autoDeleteQueue)")
             } else {
                 logger.info("RPCServer initialize queue($name) skipped assertion")

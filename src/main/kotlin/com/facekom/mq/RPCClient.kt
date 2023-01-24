@@ -51,13 +51,14 @@ open class RPCClient constructor(
             val durableReplyQueue = options.replyQueue.durable
             val exclusiveReplyQueue = options.replyQueue.exclusive
             val autoDeleteReplyQueue = options.replyQueue.autoDelete
+            val arguments = options.replyQueue.arguments
 
             replyQueueName = channel.queueDeclare(
                 replyQueueName,
                 durableReplyQueue,
                 exclusiveReplyQueue,
                 autoDeleteReplyQueue,
-                null
+                arguments
             ).queue
             logger.info("RPCClient initialized reply queue($replyQueueName) durable($durableReplyQueue) exclusive($exclusiveReplyQueue) autoDelete($autoDeleteReplyQueue)")
         } else {
