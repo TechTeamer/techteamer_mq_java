@@ -1,3 +1,8 @@
+1.4.0
+
+- multi URL support for clustering
+- queue assertion options + quorum queue support
+
 1.3.0
 
 - added option to toggle automatic connection recovery
@@ -15,4 +20,4 @@
 
 1.0.0
 
-initial release
+- initial release
