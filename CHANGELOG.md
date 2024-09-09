@@ -1,3 +1,7 @@
+1.4.1
+
+- added shutdown listener to queue connection
+
 1.4.0
 
 - multi URL support for clustering
