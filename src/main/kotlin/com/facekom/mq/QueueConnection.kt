@@ -3,6 +3,7 @@ package com.facekom.mq
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Connection
 import com.rabbitmq.client.ConnectionFactory
+import com.rabbitmq.client.ShutdownListener
 
 class QueueConnection(private val config: QueueConfig) {
     private var factory = ConnectionFactory()
@@ -33,6 +34,10 @@ class QueueConnection(private val config: QueueConfig) {
         if (!connected) {
             throw Exception("All connection attempts failed!")
         }
+    }
+
+    fun addShutdownListener(shutdownListener: ShutdownListener) {
+        connection.addShutdownListener(shutdownListener)
     }
 
     private fun connectToUrls(urls: MutableList<String>): Boolean {
