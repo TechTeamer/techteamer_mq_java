@@ -13,16 +13,16 @@ plugins {
 }
 
 group = "com.facekom"
-version = "1.4.0"
+version = "1.4.1"
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation("com.rabbitmq:amqp-client:5.16.0")
+    implementation("com.rabbitmq:amqp-client:5.22.0")
     implementation("com.google.code.gson:gson:2.10.1")
-    implementation(group = "ch.qos.logback", name = "logback-classic", version = "1.4.5")
+    implementation(group = "ch.qos.logback", name = "logback-classic", version = "1.5.8")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
     implementation("org.jetbrains.kotlin:kotlin-test-junit:1.8.0")
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
@@ -191,4 +191,22 @@ tasks.named("sonarqube") {
 
 jacoco {
     toolVersion = "0.8.7"
+}
+
+val fatJar = task("fatJar", type = Jar::class) {
+    baseName = "mq"
+    manifest {
+        attributes["Implementation-Title"] = "Mq fat jar"
+        attributes["Implementation-Version"] = version
+        attributes["Main-Class"] = "com.facekom.mq.MainKt"
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+    with(tasks.jar.get() as CopySpec)
+}
+
+tasks {
+    "build" {
+        dependsOn(fatJar)
+    }
 }
